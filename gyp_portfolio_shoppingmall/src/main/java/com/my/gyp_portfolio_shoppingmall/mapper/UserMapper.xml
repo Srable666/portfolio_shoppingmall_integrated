@@ -1,0 +1,178 @@
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="UserMapper">
+    <!-- 회원가입을 위한 insert 쿼리 -->
+    <insert id="insertUser" parameterType="User">
+        INSERT INTO users (
+            email,
+            password,
+            name,
+            phone,
+            postcode,
+            base_address,
+            detail_address
+        ) VALUES (
+            #{email},
+            #{password},
+            #{name},
+            #{phone},
+            #{postcode},
+            #{baseAddress},
+            #{detailAddress}
+        )
+    </insert>
+
+    <!-- 이메일로 사용자 정보 조회 -->
+    <select id="findByEmailForUpdate" parameterType="String" resultType="User">
+        SELECT 
+            user_id as userId,
+            email,
+            password,
+            name,
+            phone,
+            postcode,
+            base_address as baseAddress,
+            detail_address as detailAddress,
+            is_admin as isAdmin,
+            is_deleted as isDeleted,
+            created_at as createdAt,
+            reset_token as resetToken,
+            reset_token_expiry as resetTokenExpiry,
+            version
+        FROM users
+        WHERE email = #{email}
+        FOR UPDATE
+    </select>
+
+    <!-- userId로 사용자 정보 조회 -->
+    <select id="findByUserId" parameterType="Integer" resultType="User">
+        SELECT
+            user_id as userId,
+            email,
+            password,
+            name,
+            phone,
+            postcode,
+            base_address as baseAddress,
+            detail_address as detailAddress,
+            is_admin as isAdmin,
+            is_deleted as isDeleted,
+            created_at as createdAt,
+            reset_token as resetToken,
+            reset_token_expiry as resetTokenExpiry,
+            version
+        FROM users
+        WHERE user_id = #{userId}
+        AND is_deleted = 0
+    </select>
+    
+    <!-- 사용자 일반 정보(비밀번호 제외) 수정 -->
+    <update id="updateUserWithOptimisticLock" parameterType="User">
+        UPDATE users
+        SET
+            name = #{name},
+            phone = #{phone},
+            postcode = #{postcode},
+            base_address = #{baseAddress},
+            detail_address = #{detailAddress},
+            version = version + 1
+        WHERE email = #{email}
+        AND version = #{version}
+    </update>
+
+    <!-- 사용자 비밀번호 수정 -->
+    <update id="updatePassword" parameterType="User">
+        UPDATE users
+        SET
+            password = #{password},
+            reset_token = #{resetToken},
+            reset_token_expiry = #{resetTokenExpiry}
+        WHERE email = #{email}
+    </update>   
+
+    <!-- 사용자 탈퇴 -->
+    <update id="deleteUser" parameterType="String">
+        UPDATE users
+        SET is_deleted = 1
+        WHERE email = #{email}
+    </update>
+
+    <!-- 비밀번호 재설정 토큰 업데이트 -->
+    <update id="updateResetToken" parameterType="User">
+        UPDATE users
+        SET
+            reset_token = #{resetToken},
+            reset_token_expiry = #{resetTokenExpiry}
+        WHERE user_id = #{userId}
+    </update>
+
+    <!-- 비밀번호 재설정 토큰 조회 -->
+    <select id="findByResetToken" parameterType="String" resultType="User">
+        SELECT 
+            user_id as userId,
+            email,
+            password,
+            name,
+            phone,
+            postcode,
+            base_address as baseAddress,
+            detail_address as detailAddress,
+            reset_token as resetToken,
+            reset_token_expiry as resetTokenExpiry
+        FROM users
+        WHERE reset_token = #{resetToken}
+        AND is_deleted = 0
+    </select>
+
+    <!-- 회원 수 조회 -->
+    <select id="getUserCount" resultType="int">
+        SELECT COUNT(*) 
+        FROM users 
+        WHERE is_deleted = 0
+        AND is_admin = 0
+    </select>
+    
+    <!-- 회원 목록 조회 -->
+    <select id="getUserList" resultType="User" parameterType="com.my.gyp_portfolio_shoppingmall.dto.UserDto$UserListDTO">
+        SELECT
+            user_id as userId,
+            email,
+            name,
+            phone,
+            postcode,
+            base_address as baseAddress,
+            detail_address as detailAddress,
+            is_admin as isAdmin,
+            is_deleted as isDeleted,
+            created_at as createdAt
+        FROM users
+        <where>
+            <if test="email != null and email != ''">
+                email LIKE CONCAT('%', #{email}, '%')
+            </if>
+        </where>
+        ORDER BY user_id DESC
+    LIMIT #{offset}, #{size}
+    </select>
+
+    <!-- 회원 활성화/비활성화 상태 수정 -->
+    <update id="updateUserDeletedForAdmin" parameterType="User">
+        UPDATE users
+        SET is_deleted = #{isDeleted}
+        WHERE user_id = #{userId}
+    </update>
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+

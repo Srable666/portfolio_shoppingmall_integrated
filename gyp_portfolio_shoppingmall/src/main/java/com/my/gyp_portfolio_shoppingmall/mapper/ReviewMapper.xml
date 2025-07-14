@@ -1,0 +1,151 @@
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="ReviewMapper">
+    <!-- 리뷰 등록 -->
+    <insert id="insertReview" parameterType="Review">
+        INSERT INTO reviews (
+            order_product_id,
+            product_item_id,
+            user_id,
+            rating,
+            comment
+        ) VALUES (
+            #{orderProductId},
+            #{productItemId},
+            #{userId},
+            #{rating},
+            #{comment}
+        )
+    </insert>
+
+    <!-- 리뷰 정보 sql 세트 -->
+    <sql id="reviewColumn">
+        SELECT
+            r.review_id as reviewId,
+            r.order_product_id as orderProductId,
+            r.product_item_id as productItemId,
+            p.code as productCode,
+            p.name as productName,
+            pi.size as productItemSize,
+            pi.color as productItemColor,
+            r.user_id as userId,
+            u.email as userEmail,
+            u.name as userName,
+            r.rating,
+            r.comment,
+            r.created_at as createdAt,
+            r.updated_at as updatedAt,
+            r.is_deleted as isDeleted,
+            r.version
+        FROM reviews r
+        LEFT JOIN product_items pi ON r.product_item_id = pi.product_item_id
+        LEFT JOIN products p ON pi.product_id = p.product_id
+        LEFT JOIN users u ON r.user_id = u.user_id
+    </sql>
+
+    <!-- 리뷰 수정 -->
+    <update id="updateReviewWithOptimisticLock" parameterType="Review">
+        UPDATE reviews
+        SET
+            rating = #{rating},
+            comment = #{comment},
+            version = version + 1
+        WHERE review_id = #{reviewId}
+        AND version = #{version}
+    </update>
+
+    <!-- 단일 리뷰 조회 -->
+    <select id="selectReviewById" parameterType="int" resultType="Review">
+        SELECT
+            review_id as reviewId,
+            order_product_id as orderProductId,
+            product_item_id as productItemId,
+            user_id as userId,
+            rating,
+            comment,
+            created_at as createdAt,
+            updated_at as updatedAt,
+            is_deleted as isDeleted,
+            version
+        FROM reviews
+        WHERE review_id = #{reviewId}
+    </select>
+
+    <!-- 리뷰 리스트 조회(검색 조건 포함, 페이징 처리) -->
+    <select id="selectReviewList" parameterType="com.my.gyp_portfolio_shoppingmall.dto.ReviewDto$ReviewSearchDTO" resultType="com.my.gyp_portfolio_shoppingmall.dto.ReviewDto$ReviewSearchDTO">
+        <include refid="reviewColumn" />
+        <where> 
+            r.is_deleted = 0
+            <choose>
+                <when test="reviewId != null">
+                    AND r.review_id = #{reviewId}
+                </when>
+                <when test="orderProductId != null">
+                    AND r.order_product_id = #{orderProductId}
+                </when>
+                <when test="productCode != null">
+                    AND p.code = #{productCode}
+                </when>
+                <when test="productItemId != null">
+                    AND r.product_item_id = #{productItemId}
+                </when>
+                <when test="productItemIds != null and productItemIds.size > 0">
+                    AND r.product_item_id IN
+                    <foreach item="itemId" collection="productItemIds" open="(" separator="," close=")">
+                        #{itemId}
+                    </foreach>
+                </when>
+                <when test="userEmail != null">
+                    AND u.email = #{userEmail}
+                </when>
+            </choose>
+        </where>
+        ORDER BY review_id DESC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <!-- 리뷰 삭제 -->
+    <update id="deleteReview" parameterType="int">
+        UPDATE reviews
+        SET is_deleted = 1
+        WHERE review_id = #{reviewId}
+    </update>
+
+    <!-- 총 리뷰 수 조회 -->
+    <select id="getReviewCount" resultType="int">
+        SELECT COUNT(*)
+        FROM reviews
+        WHERE is_deleted = 0
+    </select>
+
+    <!-- 이미 작성된 리뷰가 있는지 조회 -->
+    <select id="checkExistingReview" parameterType="com.my.gyp_portfolio_shoppingmall.dto.ReviewDto$ReviewDTO" resultType="int">
+        SELECT 
+            COUNT(*)
+        FROM 
+            reviews r
+        WHERE 
+            r.order_product_id = #{orderProductId}
+        AND
+            r.user_id = #{userId}
+    </select>
+
+    <!-- 리뷰 조회(회원ID 기준)-->
+    <select id="getReviewByUserId" parameterType="int" resultType="Review">
+        SELECT
+            review_id as reviewId,
+            order_product_id as orderProductId,
+            product_item_id as productItemId,
+            user_id as userId,
+            rating,
+            comment,
+            created_at as createdAt,
+            updated_at as updatedAt,
+            is_deleted as isDeleted,
+            version
+        FROM reviews
+        WHERE user_id = #{userId}
+    </select>
+</mapper>

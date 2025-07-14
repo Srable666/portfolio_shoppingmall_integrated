@@ -1,0 +1,42 @@
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="LoginHistoryMapper">
+    <!-- 로그인 기록을 위한 insert 쿼리 -->
+    <insert id="insertLoginHistory" parameterType="LoginHistory">
+        INSERT INTO login_histories (
+            user_id,
+            login_datetime,
+            ip_address, 
+            user_agent,
+            device_type,
+            login_status,
+            fail_reason
+        ) VALUES (
+            #{userId},
+            NOW(),
+            #{ipAddress},
+            #{userAgent},
+            #{deviceType},
+            #{loginStatus},
+            #{failReason}
+        )
+    </insert>
+
+    <!-- 로그인 기록 조회 -->
+    <select id="getLoginHistory" parameterType="Integer" resultType="LoginHistory">
+        SELECT
+            login_history_id as loginHistoryId,
+            user_id as userId,
+            login_datetime as loginDatetime,
+            ip_address as ipAddress,
+            user_agent as userAgent,
+            device_type as deviceType,
+            login_status as loginStatus,
+            fail_reason as failReason
+        FROM login_histories
+        WHERE user_id = #{userId}
+        ORDER BY login_datetime DESC
+    </select>
+</mapper>

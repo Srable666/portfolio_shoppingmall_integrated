@@ -1,0 +1,1 @@
+org.springframework.boot.env.EnvironmentPostProcessor=com.my.gyp_portfolio_shoppingmall.config.EnvFileLoader

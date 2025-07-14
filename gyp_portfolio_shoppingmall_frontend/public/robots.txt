@@ -1,0 +1,7 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Disallow: /
+Crawl-delay: 86400
+
+# 포트폴리오 데모 사이트 - 상업적 크롤링 금지
+# This is a portfolio demo site - Commercial crawling prohibited

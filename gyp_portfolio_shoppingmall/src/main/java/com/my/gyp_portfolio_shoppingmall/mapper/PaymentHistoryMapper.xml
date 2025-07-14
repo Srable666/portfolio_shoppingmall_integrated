@@ -1,0 +1,137 @@
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="PaymentHistoryMapper">
+    <!-- 결제 이력 정보 생성 -->
+    <insert id="insertPaymentHistory" parameterType="PaymentHistory">
+        INSERT INTO payment_histories (
+            imp_uid,
+            merchant_uid,
+            order_id,
+            status,
+            payment_method,
+            amount,
+            customer_name,
+            customer_email,
+            customer_phone,
+            requested_at,
+            payment_data,
+            error_code,
+            error_message
+        ) VALUES (
+            #{impUid},
+            #{merchantUid},
+            #{orderId},
+            #{status},
+            #{paymentMethod},
+            #{amount},
+            #{customerName},
+            #{customerEmail},
+            #{customerPhone},
+            #{requestedAt},
+            #{paymentData},
+            #{errorCode},
+            #{errorMessage}
+        )
+    </insert>
+
+    <!-- 결제 이력 정보 sql 세트 -->
+    <sql id="paymentHistoryColumns">
+        SELECT 
+            payment_history_id as paymentHistoryId,
+            imp_uid as impUid,
+            merchant_uid as merchantUid,
+            order_id as orderId,
+            status as status,
+            payment_method as paymentMethod,
+            amount as amount,
+            customer_name as customerName,
+            customer_email as customerEmail,
+            customer_phone as customerPhone,
+            requested_at as requestedAt,
+            payment_data as paymentData,
+            error_code as errorCode,
+            error_message as errorMessage,
+            created_at as createdAt,
+            updated_at as updatedAt
+        FROM payment_histories
+    </sql>
+
+    <!-- 결제 이력 업데이트 -->
+    <update id="updatePaymentHistory" parameterType="PaymentHistory">
+        UPDATE payment_histories
+        SET
+            status = #{status},
+            payment_method = #{paymentMethod},
+            amount = #{amount},
+            customer_name = #{customerName},
+            customer_email = #{customerEmail},
+            customer_phone = #{customerPhone},
+            requested_at = #{requestedAt},
+            payment_data = #{paymentData},
+            error_code = #{errorCode},
+            error_message = #{errorMessage}
+        WHERE imp_uid = #{impUid}
+    </update>
+
+    <!-- 결제 이력 조회(payment_id) -->
+    <select id="selectPaymentHistoryByPaymentId" parameterType="String" resultType="PaymentHistory">
+        <include refid="paymentHistoryColumns" />
+        WHERE imp_uid = #{impUid}
+    </select>
+
+    <!-- 결제 이력 조회(order_id) -->
+    <select id="selectPaymentHistoryByOrderId" parameterType="String" resultType="PaymentHistory">
+        <include refid="paymentHistoryColumns" />
+        WHERE order_id = #{orderId}
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- 결제 이력 조회(merchant_uid) -->
+    <select id="selectPaymentHistoryByMerchantUid" parameterType="String" resultType="PaymentHistory">
+        <include refid="paymentHistoryColumns" />
+        WHERE merchant_uid = #{merchantUid}
+        ORDER BY created_at DESC
+    </select>
+    
+    <!-- 결제 이력 검색(관리자용) -->
+    <select id="searchPaymentHistory" parameterType="com.my.gyp_portfolio_shoppingmall.dto.PaymentDto$PaymentHistorySearchDTO" resultType="PaymentHistory">
+        <include refid="paymentHistoryColumns" />
+        <where>
+            <if test="impUid != null and impUid != ''">
+                imp_uid LIKE CONCAT('%', #{impUid}, '%')
+            </if>
+            <if test="merchantUid != null and merchantUid != ''">
+                AND merchant_uid LIKE CONCAT('%', #{merchantUid}, '%')
+            </if>
+            <if test="orderId != null">
+                AND order_id = #{orderId}
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+            <if test="paymentMethod != null and paymentMethod != ''">
+                AND payment_method = #{paymentMethod}
+            </if>
+            <if test="startDate != null">
+                AND created_at &gt;= #{startDate}
+            </if>
+            <if test="endDate != null">
+                AND created_at &lt;= #{endDate}
+            </if>
+        </where>
+        ORDER BY created_at DESC
+        <if test="offset != null and size != null and size > 0">
+            LIMIT #{offset}, #{size}
+        </if>
+    </select>
+
+    <!-- 총 매출 조회 -->
+    <select id="getTotalRevenue" resultType="long">
+        SELECT COALESCE(SUM(amount), 0)
+        FROM payment_histories
+        WHERE status = 'PAID'
+        AND error_code IS NULL
+    </select>
+</mapper>

@@ -1,0 +1,96 @@
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="DeliveryHistoryMapper">
+    <!-- 배송 이력 정보 생성 -->
+    <insert id="insertDeliveryHistory" parameterType="DeliveryHistory" useGeneratedKeys="true" keyProperty="deliveryHistoryId">
+        INSERT INTO delivery_histories (
+            order_product_id,
+            delivery_type,
+            invoice_number,
+            delivery_company,
+            delivery_status,
+            delivery_start_date,
+            delivery_complete_date
+        ) VALUES (
+            #{orderProductId},
+            #{deliveryType},
+            #{invoiceNumber},
+            #{deliveryCompany},
+            #{deliveryStatus},
+            #{deliveryStartDate},
+            #{deliveryCompleteDate}
+        )
+    </insert>
+
+    <!-- 배송 이력 정보 sql 세트 -->
+    <sql id="deliveryHistoryColumn">
+        SELECT 
+            delivery_history_id as deliveryHistoryId,
+            order_product_id as orderProductId,
+            delivery_type as deliveryType,
+            invoice_number as invoiceNumber,
+            delivery_company as deliveryCompany,
+            delivery_status as deliveryStatus,
+            delivery_start_date as deliveryStartDate,
+            delivery_complete_date as deliveryCompleteDate
+        FROM delivery_histories
+    </sql>
+
+    <!-- 배송 이력 정보 조회(orderProductId 기준) -->
+    <select id="getDeliveryHistory" parameterType="Integer" resultType="DeliveryHistory">
+        <include refid="deliveryHistoryColumn" />
+        WHERE order_product_id = #{orderProductId}
+    </select>
+
+    <!-- 배송 이력 정보 수정 -->
+    <update id="updateDeliveryHistory" parameterType="DeliveryHistory">
+        UPDATE delivery_histories 
+        SET 
+            delivery_type = #{deliveryType},
+            invoice_number = #{invoiceNumber},
+            delivery_company = #{deliveryCompany},
+            delivery_status = #{deliveryStatus},
+            delivery_start_date = #{deliveryStartDate},
+            delivery_complete_date = #{deliveryCompleteDate}    
+        WHERE delivery_history_id = #{deliveryHistoryId}
+    </update>
+
+    <!-- 최근 준비중인 배송 이력 조회 -->
+    <select id="selectLatestPreparingDeliveryHistory" parameterType="Integer" resultType="DeliveryHistory">
+        <include refid="deliveryHistoryColumn" />
+        WHERE order_product_id = #{orderProductId}
+        AND delivery_status = 'PREPARING'
+        ORDER BY delivery_start_date DESC
+        LIMIT 1
+    </select>
+
+    <!-- 최근 배송중인 배송 이력 조회 -->
+    <select id="selectLatestDeliveringDeliveryHistory" parameterType="Integer" resultType="DeliveryHistory">
+        <include refid="deliveryHistoryColumn" />
+        WHERE order_product_id = #{orderProductId}
+        AND delivery_status = 'DELIVERING'
+        ORDER BY delivery_start_date DESC
+        LIMIT 1
+    </select>
+
+    <!-- 최근 배송완료인 배송 이력 조회 -->
+    <select id="selectLatestDeliveredDeliveryHistory" parameterType="Integer" resultType="DeliveryHistory">
+        <include refid="deliveryHistoryColumn" />
+        WHERE order_product_id = #{orderProductId}
+        AND delivery_status = 'DELIVERED'
+        ORDER BY delivery_start_date DESC
+        LIMIT 1 
+    </select>
+
+    <!-- 최근 반품중인 배송 이력 조회 -->
+    <select id="selectLatestReturningDeliveryHistory" parameterType="Integer" resultType="DeliveryHistory">
+        <include refid="deliveryHistoryColumn" />
+        WHERE order_product_id = #{orderProductId}
+        AND delivery_status = 'RETURNING'
+        ORDER BY delivery_start_date DESC
+        LIMIT 1
+    </select>
+
+</mapper>

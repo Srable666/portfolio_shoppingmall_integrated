@@ -1,0 +1,105 @@
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="CategoryMapper">
+    <!-- 카테고리 등록(관리자 전용 기능) -->
+    <insert id="insertCategory" parameterType="Category">
+        INSERT INTO categories (
+            code,   
+            name,
+            parent_category_id
+        ) VALUES (
+            #{code},    
+            #{name},
+            #{parentCategoryId}
+        )
+    </insert>   
+
+    <!-- 카테고리 정보 조회 -->
+    <select id="getCategory" resultType="Category">
+        SELECT
+            category_id as categoryId,
+            code,
+            name,
+            parent_category_id as parentCategoryId
+        FROM categories
+        WHERE category_id = #{categoryId}
+    </select>
+
+    <!-- 카테고리 정보 수정 -->
+    <update id="updateCategory" parameterType="Category">
+        UPDATE categories
+        SET
+            code = #{code},
+            name = #{name},
+            parent_category_id = #{parentCategoryId}
+        WHERE category_id = #{categoryId}
+    </update>   
+
+    <!-- 카테고리 삭제 -->
+    <delete id="deleteCategory" parameterType="Category">
+        DELETE FROM categories
+        WHERE category_id = #{categoryId}
+    </delete>
+
+    <!-- 최상위 카테고리 목록 조회 -->
+    <select id="getTopCategories" resultType="Category">
+        SELECT
+            category_id as categoryId,
+            code,
+            name
+        FROM categories
+        WHERE parent_category_id IS NULL
+    </select>
+
+    <!-- 하위 카테고리 목록 조회 -->
+    <select id="getSubCategories" resultType="Category">
+        SELECT
+            category_id as categoryId,
+            code,
+            name,
+            parent_category_id as parentCategoryId
+        FROM categories
+        WHERE parent_category_id = #{categoryId}
+    </select>
+
+    <!-- 모든 카테고리 목록 조회 -->
+    <select id="getCategories" resultType="Category">
+        SELECT
+            category_id as categoryId,
+            code,
+            name,
+            parent_category_id as parentCategoryId
+        FROM categories
+        ORDER BY category_id DESC
+    </select>
+
+    <!-- 카테고리 경로 조회 -->
+    <select id="getCategoryPath" resultType="Category">
+        WITH RECURSIVE category_path AS (
+            SELECT 
+                category_id as categoryId,
+                code,
+                name,
+                parent_category_id as parentCategoryId,
+                0 as depth
+            FROM categories
+            WHERE category_id = #{categoryId}
+            
+            UNION ALL
+            
+            SELECT 
+                c.category_id as categoryId,
+                c.code,
+                c.name,
+                c.parent_category_id as parentCategoryId,
+                cp.depth + 1 as depth
+            FROM categories c
+            INNER JOIN category_path cp ON c.category_id = cp.parentCategoryId
+        )
+        SELECT categoryId, code, name, parentCategoryId
+        FROM category_path
+        ORDER BY depth DESC
+    </select>
+</mapper>

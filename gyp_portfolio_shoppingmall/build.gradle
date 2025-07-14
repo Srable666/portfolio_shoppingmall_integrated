@@ -1,0 +1,106 @@
+plugins {
+   id 'java'
+   id 'war'
+   id 'org.springframework.boot' version '2.7.16'
+   id 'io.spring.dependency-management' version '1.0.15.RELEASE'
+}
+
+// 그룹 및 버전 설정
+group = 'com.my'
+version = '0.0.1-SNAPSHOT'
+
+// 자바 버전 설정
+java {
+   toolchain {
+      languageVersion = JavaLanguageVersion.of(17)
+   }
+}
+
+// 컴파일 설정
+tasks.withType(JavaCompile) {
+   options.encoding = 'UTF-8'
+   sourceCompatibility = '17'
+   targetCompatibility = '17'
+}
+
+// 테스트 실행
+tasks.named('test') {
+   useJUnitPlatform()
+}
+
+// 실행 설정
+tasks.withType(JavaExec) {
+   systemProperty 'file.encoding', 'UTF-8'
+   systemProperty 'console.encoding', 'UTF-8'
+   jvmArgs = ['-Dfile.encoding=UTF-8', '-Dconsole.encoding=UTF-8']
+}
+
+// 레포지토리 설정
+repositories {
+   mavenCentral()
+}
+
+dependencies {
+   //spring boot(스프링 부트)
+   implementation 'org.springframework.boot:spring-boot-starter-web'
+
+   //security(인증 및 권한 관리)
+   implementation 'org.springframework.boot:spring-boot-starter-security'
+
+   //tomcat(JSP 엔진)
+   providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
+
+   //test(테스트 프레임워크)
+   testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+   //junit(테스트 프레임워크)
+   testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+   //jstl(JSP 태그 라이브러리)
+   implementation 'javax.servlet:jstl'
+
+   //tomcat(JSP 엔진)
+   implementation "org.apache.tomcat.embed:tomcat-embed-jasper"
+
+   //mybatis(ORM)
+   implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:2.2.2'
+
+   //mariadb(선택)
+   runtimeOnly 'org.mariadb.jdbc:mariadb-java-client:2.7.4'
+
+   // commons-lang3(문자열 처리)
+   implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'
+
+   // lombok(롬복)
+   compileOnly 'org.projectlombok:lombok'
+   annotationProcessor 'org.projectlombok:lombok'
+
+   // jwt(JSON Web Token)
+   implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+   runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+   runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+
+   // redis(캐시)
+   implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+   // mail(이메일 발송)
+   implementation('org.springframework.boot:spring-boot-starter-web') {
+      exclude group: 'jakarta.mail', module: 'jakarta.mail-api'
+   }
+   implementation 'javax.mail:javax.mail-api:1.6.2'  // API 인터페이스
+   implementation 'com.sun.mail:javax.mail:1.6.2'    // 실제 구현체
+
+   // aspectj(AOP)
+   implementation 'org.springframework:spring-aop:5.3.30'
+   implementation 'org.aspectj:aspectjrt:1.9.7'
+   implementation 'org.aspectj:aspectjweaver:1.9.7'
+
+   // webflux(REST API 통신)
+   implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+   // json(JSON 파싱)
+   implementation 'org.springframework.boot:spring-boot-starter-json'
+
+   // 환경변수 처리
+   implementation 'org.springframework.boot:spring-boot-configuration-processor'
+}

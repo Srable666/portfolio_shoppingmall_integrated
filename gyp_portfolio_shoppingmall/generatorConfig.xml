@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration
+    PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+    "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+
+<generatorConfiguration>
+    <!-- MariaDB JDBC 드라이버 위치 -->
+    <classPathEntry location="C:/libs/mariadb-java-client-2.7.4.jar" />
+
+    <context id="MariaDBTables" targetRuntime="MyBatis3">
+        <!-- 주석 제거 옵션 -->
+        <commentGenerator>
+            <property name="suppressAllComments" value="true" />
+        </commentGenerator>
+
+        <!-- 데이터베이스 연결 정보 -->
+        <jdbcConnection driverClass="org.mariadb.jdbc.Driver"
+                        connectionURL="jdbc:mariadb://54.180.232.189:3306/portfolio_shopping_mall"
+                        userId="gyp"
+                        password="123qwe!">
+        </jdbcConnection>
+
+        <!-- 모델 클래스(VO) 생성 규칙 -->
+        <javaModelGenerator targetPackage="com.my.gyp_portfolio_shoppingmall.vo" targetProject="gyp_portfolio_shoppingmall/src/main/java">
+            <property name="enableSubPackages" value="true" />
+            <property name="trimStrings" value="true" />
+        </javaModelGenerator>
+
+        <!-- 테이블 매핑 -->
+        <table tableName="users" domainObjectName="User" />
+        <table tableName="products" domainObjectName="Product" />
+        <table tableName="categories" domainObjectName="Category" />
+        <table tableName="orders" domainObjectName="Order" />
+        <table tableName="order_items" domainObjectName="OrdersItem" />
+        <table tableName="reviews" domainObjectName="Review" />
+        <table tableName="login_histories" domainObjectName="LoginHistory" />
+    </context>
+</generatorConfiguration>

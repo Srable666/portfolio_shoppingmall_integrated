@@ -1,0 +1,229 @@
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="ProductMapper"> 
+    <!-- 상품 마스터 등록(관리자 전용 기능) -->
+    <insert id="insertProduct" parameterType="Product">
+        INSERT INTO products (
+            name,
+            code,
+            base_price,
+            discount_rate,
+            final_price,
+            category_id,
+            image_url,
+            description
+        ) VALUES (
+            #{name},
+            #{code},
+            #{basePrice},
+            #{discountRate},
+            #{finalPrice},
+            #{categoryId},
+            #{imageUrl},
+            #{description}
+        )
+    </insert>
+
+    <!-- 상품 정보 변경 -->
+    <update id="updateProduct" parameterType="Product">
+        UPDATE products
+        SET
+            name = #{name},
+            code = #{code},
+            description = #{description},
+            base_price = #{basePrice},
+            discount_rate = #{discountRate},
+            final_price = #{finalPrice},
+            category_id = #{categoryId},
+            image_url = #{imageUrl},
+            is_active = #{isActive},
+            is_deleted = #{isDeleted}
+        WHERE product_id = #{productId}
+    </update>
+
+    <resultMap id="ProductWithCategoryMap" type="com.my.gyp_portfolio_shoppingmall.dto.ProductDto$ProductDTO">
+        <id property="productId" column="productId"/>
+        <result property="name" column="name"/>
+        <result property="code" column="code"/>
+        <result property="basePrice" column="basePrice"/>
+        <result property="discountRate" column="discountRate"/>
+        <result property="finalPrice" column="finalPrice"/>
+        <result property="categoryId" column="categoryId"/>
+        <result property="imageUrl" column="imageUrl"/>
+        <result property="description" column="description"/>
+        <result property="viewCount" column="viewCount"/>
+        <result property="createdAt" column="createdAt"/>
+        <result property="updatedAt" column="updatedAt"/>
+        <result property="isActive" column="isActive"/>
+        <result property="isDeleted" column="isDeleted"/>
+        <result property="categoryName" column="categoryName"/>
+    </resultMap>
+
+    <!-- 단일 상품 정보 조회(productId 기준) -->
+    <select id="getProductById" parameterType="Integer" resultType="Product">
+        SELECT
+            product_id as productId,
+            name,
+            code,
+            description,
+            base_price as basePrice,
+            discount_rate as discountRate,
+            final_price as finalPrice,
+            category_id as categoryId,
+            image_url as imageUrl,
+            description,
+            view_count as viewCount,
+            created_at as createdAt,
+            updated_at as updatedAt,
+            is_active as isActive,
+            is_deleted as isDeleted
+        FROM products
+        WHERE product_id = #{productId}
+    </select>
+    
+    <!-- 단일 상품 정보 조회(code 기준) -->
+    <select id="getProductByCode" parameterType="String" resultType="Product">
+        SELECT
+            product_id as productId,
+            name,
+            code,
+            description,
+            base_price as basePrice,
+            discount_rate as discountRate,
+            final_price as finalPrice,
+            category_id as categoryId,
+            image_url as imageUrl,
+            description,
+            view_count as viewCount,
+            created_at as createdAt,
+            updated_at as updatedAt,
+            is_active as isActive,
+            is_deleted as isDeleted
+        FROM products
+        WHERE code = #{code}
+    </select>
+
+    <!-- 검색 조건에 따른 상품 목록 조회 -->
+    <select id="getProductListBySearch" parameterType="com.my.gyp_portfolio_shoppingmall.dto.ProductDto$ProductSearchDTO" resultMap="ProductWithCategoryMap">
+        WITH RECURSIVE CategoryHierarchy AS (
+            SELECT category_id, parent_category_id, name
+            FROM categories
+            WHERE category_id = #{categoryId}
+
+            UNION ALL
+            SELECT c.category_id, c.parent_category_id, c.name
+            FROM categories c
+            INNER JOIN CategoryHierarchy ch ON c.parent_category_id = ch.category_id
+        )
+        SELECT
+            p.product_id as productId,
+            p.name,
+            p.code,
+            p.description,
+            p.base_price as basePrice,
+            p.discount_rate as discountRate,
+            p.final_price as finalPrice,
+            p.category_id as categoryId,
+            p.image_url as imageUrl,
+            p.view_count as viewCount,
+            p.created_at as createdAt,
+            p.updated_at as updatedAt,
+            p.is_active as isActive,
+            p.is_deleted as isDeleted,
+            c.name as categoryName
+        FROM products p
+        LEFT JOIN categories c ON p.category_id = c.category_id
+        <where>
+            p.is_deleted = 0
+            <if test="categoryId != null">
+                AND p.category_id IN (SELECT category_id FROM CategoryHierarchy)
+            </if>
+            <if test="keyword != null">
+                AND p.name LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+        </where>
+        ORDER BY p.product_id DESC
+    </select>
+
+    <!-- 모든 상품 목록 조회 -->
+    <select id="getAllProducts" resultMap="ProductWithCategoryMap">
+        SELECT
+            p.product_id as productId,
+            p.name,
+            p.code,
+            p.description,
+            p.base_price as basePrice,
+            p.discount_rate as discountRate,
+            p.final_price as finalPrice,
+            p.category_id as categoryId,
+            p.image_url as imageUrl,
+            p.description,
+            p.view_count as viewCount,
+            p.created_at as createdAt,
+            p.updated_at as updatedAt,
+            p.is_active as isActive,
+            p.is_deleted as isDeleted,
+            c.name as categoryName
+        FROM products p
+        LEFT JOIN categories c ON p.category_id = c.category_id
+        WHERE p.is_deleted = 0
+        ORDER BY p.product_id DESC
+    </select>
+
+    <!-- 새로운 상품 조회 -->
+    <select id="getNewProducts" parameterType="Integer" resultMap="ProductWithCategoryMap">
+        SELECT
+            product_id as productId,
+            name,
+            code,
+            description,
+            base_price as basePrice,
+            discount_rate as discountRate,
+            final_price as finalPrice,
+            category_id as categoryId,
+            image_url as imageUrl,
+            view_count as viewCount,
+            created_at as createdAt,
+            updated_at as updatedAt,
+            is_active as isActive,
+            is_deleted as isDeleted
+        FROM products 
+        WHERE is_active = 1 AND is_deleted = 0 
+        ORDER BY created_at DESC 
+        LIMIT #{limit}
+    </select>
+
+    <!-- 인기 상품 조회 -->
+    <select id="getPopularProducts" parameterType="Integer" resultMap="ProductWithCategoryMap">
+        SELECT
+            p.product_id as productId,
+            p.name,
+            p.code,
+            p.description,
+            p.base_price as basePrice,
+            p.discount_rate as discountRate,
+            p.final_price as finalPrice,
+            p.category_id as categoryId,
+            p.image_url as imageUrl,
+            p.view_count as viewCount,
+            p.created_at as createdAt,
+            p.updated_at as updatedAt,
+            p.is_active as isActive,
+            p.is_deleted as isDeleted
+        FROM products p 
+        LEFT JOIN product_items pi ON p.product_id = pi.product_id 
+        WHERE p.is_active = 1 AND p.is_deleted = 0 AND pi.is_active = 1 AND pi.is_deleted = 0
+        GROUP BY p.product_id 
+        ORDER BY SUM(pi.sales_count) DESC
+        LIMIT #{limit}
+    </select>
+    
+    <!-- 상품 마스터 코드 중복 여부 확인 -->
+    <select id="isCodeExists" parameterType="String" resultType="Integer">
+        SELECT COUNT(*)
+        FROM products
+        WHERE code = #{code}
+    </select>
+</mapper>   

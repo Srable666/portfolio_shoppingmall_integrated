@@ -1,0 +1,44 @@
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="OrderProductHistoryMapper">
+
+    <!-- 주문 상품 이력 생성 -->
+    <insert id="insertOrderProductHistory" parameterType="OrderProductHistory">
+        INSERT INTO order_product_histories (
+            order_product_id,
+            request_quantity_record,
+            status_from,
+            status_to,
+            reason
+        ) VALUES (
+            #{orderProductId},
+            #{requestQuantityRecord},
+            #{statusFrom},
+            #{statusTo},
+            #{reason}
+        )
+    </insert>
+
+    <!-- 주문 상품 이력 조회(조건 중 가장 최신 이력 조회) -->
+    <select id="selectOrderProductHistory" parameterType="OrderProduct" resultType="OrderProductHistory">
+        SELECT 
+            order_product_history_id as orderProductHistoryId,
+            order_product_id as orderProductId,
+            request_quantity_record as requestQuantityRecord,
+            status_from as statusFrom,
+            status_to as statusTo,
+            reason as reason,
+            created_at as createdAt
+        FROM 
+            order_product_histories
+        WHERE 
+            order_product_id = #{orderProductId}
+            AND 
+                status_to = #{status}
+        ORDER BY 
+            created_at DESC
+        LIMIT 1
+    </select>
+</mapper>

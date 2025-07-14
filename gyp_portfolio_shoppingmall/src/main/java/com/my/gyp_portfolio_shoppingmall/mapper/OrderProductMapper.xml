@@ -1,0 +1,113 @@
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="OrderProductMapper">
+
+    <!-- 주문 상품 정보 생성 -->
+    <insert id="insertOrderProduct" parameterType="OrderProduct" useGeneratedKeys="true" keyProperty="orderProductId">
+        INSERT INTO order_products (
+            order_id,
+            product_item_id,
+            original_quantity,
+            changed_quantity,
+            request_quantity,
+            price,
+            discount_rate,
+            final_price,
+            size,
+            color,
+            status
+        ) VALUES (
+            #{orderId},
+            #{productItemId},
+            #{originalQuantity},
+            #{changedQuantity},
+            #{requestQuantity},
+            #{price},
+            #{discountRate},
+            #{finalPrice},
+            #{size},
+            #{color},
+            #{status}
+        )
+    </insert>
+
+    <!-- 주문 상품 정보 sql 세트-->
+    <sql id="orderProductColumn">
+        SELECT 
+            order_product_id as orderProductId,
+            order_id as orderId,
+            product_item_id as productItemId,
+            original_quantity as originalQuantity,
+            changed_quantity as changedQuantity,
+            request_quantity as requestQuantity,
+            price,
+            discount_rate as discountRate,
+            final_price as finalPrice,
+            size,
+            color,
+            status,
+            request_reason as requestReason,
+            created_at as createdAt,
+            updated_at as updatedAt,
+            version
+    </sql>
+
+    <!-- 주문 상품 정보 조회 -->
+    <select id="getOrderProduct" parameterType="OrderProduct" resultType="OrderProduct">
+        <include refid="orderProductColumn"/>
+        FROM order_products
+        <where> 
+            <if test="orderProductId != null">
+                order_product_id = #{orderProductId}
+            </if>
+            <if test="orderId != null">
+                order_id = #{orderId}
+            </if>
+        </where>
+    </select>
+
+    <!-- 주문 내역 개별 상품 상태 업데이트 -->
+    <update id="updateOrderProductStatusWithOptimisticLock" parameterType="OrderProduct">
+        UPDATE 
+            order_products
+        SET 
+            status = #{status},
+            version = version + 1,
+            <if test="changedQuantity != null">
+                , changed_quantity = #{changedQuantity}
+            </if>
+            <if test="requestQuantity != null">
+                , request_quantity = #{requestQuantity}
+            </if>
+            <if test="requestReason != null">
+                , request_reason = #{requestReason}
+            </if>
+        WHERE order_product_id = #{orderProductId}
+        AND version = #{version}
+    </update>
+
+    <!-- 자동 구매 확정 조건의 주문 상품 조회 -->
+    <select id="findUnconfirmedDeliveries" parameterType="java.time.LocalDateTime" resultType="OrderProduct">
+        SELECT 
+            <include refid="orderProductColumn"/>
+        FROM order_products
+        WHERE 
+            (status = 'DELIVERED'
+            OR status = 'EXCHANGE_DELIVERED')
+            AND delivery_complete_date &lt; #{cutoffDate}
+            AND delivery_confirm_date IS NULL
+    </select>
+
+    <!-- 회원의 주문 내역이 존재하는지 확인 -->
+    <select id="checkUserOrderedProduct" parameterType="map" resultType="Integer">
+        SELECT COUNT(*)
+        FROM order_products op
+        JOIN product_items pi ON op.product_item_id = pi.product_item_id
+        JOIN orders o ON op.order_id = o.order_id
+        WHERE o.user_id = #{userId}
+        AND pi.product_item_id = #{productItemId}
+        AND op.status IN ('DELIVERY_CONFIRMED')
+    </select>
+</mapper>
