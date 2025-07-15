@@ -54,7 +54,7 @@ public class OrderController {
         }
     }
 
-    // 관리자용 주문 상품 상태 업데이트(결제 완료 -> 준비중)
+    // 관리자용 주문 상품 상태 업데이트(결제대기 -> 결제완료)
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("/updateOrderProductStatusToPaymentCompleted")
     public ResponseEntity<?> updateOrderProductStatusToPaymentCompleted(@RequestBody List<OrderProductDTO> orderProductDTOList) {
@@ -75,7 +75,7 @@ public class OrderController {
         }
     }
 
-    // 관리자용 주문 내역 업데이트(결제 완료 -> 준비중)
+    // 관리자용 주문 내역 업데이트(결제완료 -> 준비중)
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("/manuallyUpdateOrderProductStatusToPreparing")
     public ResponseEntity<?> manuallyUpdateOrderProductStatusToPreparing(@RequestBody List<OrderProductDTO> orderProductDTOList) {
