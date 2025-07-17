@@ -2,24 +2,53 @@
 
 > 의류 및 패션 전문 풀스택 쇼핑몰 웹 서비스
 
-실무급 전자상거래 플랫폼으로, 현대적인 웹 기술 스택과 엔터프라이즈급 아키텍처를 활용하여 구현된 포트폴리오 프로젝트입니다.
+실무급 전자상거래 플랫폼을 목표로, 현대적인 웹 기술 스택과 아키텍처를 활용하여 구현된 포트폴리오 프로젝트입니다.
 
-## 🚀 주요 특징 ⚠️(검토 요망)
+## 📺 데모 ⚠️(미완성/검토 요망)
 
-- **실무급 보안**: JWT 이중 토큰 구조 + Redis 기반 토큰 관리
-- **동시성 제어**: 비관적/낙관적 락을 활용한 데이터 일관성 보장
-- **결제 연동**: 포트원(PortOne) 테스트 환경 연동
-- **현대적 UI/UX**: React + Ant Design 기반 반응형 디자인
-- **마이크로서비스 지향**: 독립적인 백엔드/프론트엔드 구조
+### 라이브 데모
+🔗 **[Live Demo]()**  
+*AWS Lightsail에서 호스팅 중*
 
-## 🛠 기술 스택 (초안)
+> ⚠️ **현재 상태**: 결제 시스템 연동 및 주문 관리 기능 개발 진행 중 (약 85% 완성)
+
+### 스크린샷
+*(스크린샷 이미지들 추가 예정)*
+
+### 📝 이미지 출처
+본 포트폴리오 프로젝트의 상품 이미지는 **[무신사(MUSINSA)](https://www.musinsa.com)**에서 제공하는 이미지를 사용했습니다. 
+이는 포트폴리오 개발 목적으로만 사용되며, 상업적 이용이 아닌 기술 시연을 위한 것입니다.
+
+## 🎯 주요 특징 및 기술적 하이라이트
+
+### 🔐 보안 중심 설계
+- **JWT 이중 토큰 구조 + Redis 블랙리스트**로 Access/Refresh 토큰 분리 관리
+- **bcrypt + AES-256-GCM** 다층 암호화로 비밀번호/전화번호 보호
+- **환경변수 관리 + 권한 기반 접근 제어**로 시스템 보안 강화
+
+### ⚡ 고성능 동시성 제어
+- **낙관적/비관적 락** 조합으로 데이터 일관성 보장
+- **3단계 상품 구조** (마스터/품목/재고)로 확장 가능한 재고 관리
+- **트랜잭션 격리 수준 REPEATABLE_READ** 적용으로 데이터 정합성 확보
+
+### 💳 실시간 테스트 결제 시스템 *(개발 중)*
+- **포트원 API 연동 + 웹훅 처리**로 결제 상태 실시간 동기화
+- **데스크톱 팝업 + 모바일 리디렉션** 방식 지원
+- **부분 취소/반품/교환** 비즈니스 로직 구현
+
+### 🎨 현대적 풀스택 아키텍처
+- **React 18 + Ant Design** 기반 반응형 디자인 (768px 기준)
+- **마이크로서비스 지향** 백엔드/프론트엔드 분리로 독립적 개발/배포
+- **멀티 프로파일 환경** (dev/prod/staging) + Redis 캐싱 전략
+
+## 🛠 기술 스택
 
 ### Backend
 - **Framework**: Spring Boot 2.7.16 (Java 17)
 - **Security**: Spring Security + JWT + Redis
 - **Database**: MyBatis + MariaDB
 - **Infrastructure**: AWS Lightsail + Nginx + Cloudflare
-- **External APIs**: PortOne (결제), JavaMail (이메일)
+- **External APIs**: PortOne (결제) *(개발 중)*, JavaMail (이메일 발송)
 - **Concurrency**: AOP 기반 낙관적 락, 비관적 락
 
 ### Frontend
@@ -28,256 +57,328 @@
 - **Styling**: Styled Components 6.1.17
 - **Routing**: React Router DOM 7.5.0
 - **HTTP Client**: Axios 1.8.4
+- **State Management**: React Context API
+- **External APIs**: PortOne 결제, 다음 우편번호 API
 
-## 📋 주요 기능 (초안)
+## 🚀 구현된 주요 기능
 
-### 사용자 기능
-- [x] **회원가입/로그인** (JWT 이중 토큰 구조)
-- [x] **비밀번호 재설정** (이메일 인증 + 토큰)
-- [x] **회원정보 수정** (일반정보/비밀번호 분리)
-- [x] **회원탈퇴** (본인 확인 후 처리)
-- [x] **본인 확인** (비밀번호 검증)
-- [x] **상품 검색/조회/필터링** (카테고리별/키워드 검색)
-- [x] **상품 상세 조회** (상품 코드 기반)
-- [x] **상품 이미지 조회** (이미지 서빙 시스템)
-- [x] **신상품/인기상품** 조회
-- [x] **주문 접수** (재고 검증 + 자동 차감)
-- [x] **결제 처리** (포트원 연동 + 웹훅)
-- [x] **주문 이력 관리** (목록/상세 조회)
-- [x] **결제 이력 조회** (다양한 기준)
-- [x] **취소/반품/교환 요청** (부분 처리 지원)
-- [x] **배송 추적** (배송 이력 조회)
-- [x] **구매확정** (배송완료→구매확정)
-- [x] **상품 리뷰 작성** (주문 고객만/중복 방지)
-- [x] **리뷰 관리** (수정/삭제/목록 조회)
-- [x] **장바구니 관리** (로컬스토리지 기반)
+### 👥 사용자 시스템
+- [x] **완전한 회원 관리**: 가입/로그인부터 탈퇴까지 전체 라이프사이클 지원
+- [x] **보안 강화 인증**: JWT 이중 토큰 + 이메일 인증 기반 비밀번호 재설정
+- [x] **개인정보 보호**: 비밀번호/전화번호 암호화 + 로그인 이력 추적
 
-### 관리자 기능
-- [x] **회원 관리** (목록조회/활성화/비활성화)
-- [x] **회원 통계** (전체 회원수)
-- [x] **로그인 이력 관리** (IP/User-Agent 추적)
-- [x] **카테고리 관리** (등록/수정/삭제/계층구조)
-- [x] **상품 관리** (등록/수정)
-- [x] **상품 이미지 관리** (업로드/서빙/삭제)
-- [x] **상품 품목 관리** (사이즈/색상별 관리)
-- [x] **재고 관리** (단일/대량 입고, 재고 이력)
-- [x] **주문 관리** (전체 주문 목록/검색/필터링)
-- [x] **주문 상태 관리** (결제대기→결제완료→준비중→배송중→배송완료)
-- [x] **결제 관리** (결제 검증/취소/이력 검색)
-- [x] **매출 관리** (총 매출 조회/통계)
-- [x] **취소/반품/교환 승인** (관리자 승인 프로세스)
-- [x] **배송 관리** (배송 정보 업데이트/송장번호 입력)
-- [x] **교환 배송 관리** (교환 준비중→교환 배송중→교환 배송완료)
-- [x] **주문 통계** (전체 주문수)
-- [x] **리뷰 관리** (삭제/통계)
-- [x] **대시보드** (기존 통계 API 조합)
+### 🛍️ 쇼핑 경험
+- [x] **스마트 상품 탐색**: 카테고리별/키워드 검색 + 6가지 정렬 옵션
+- [x] **직관적 주문 프로세스**: 장바구니 → 주문 → 결제 → 배송 추적
+- [x] **실시간 재고 관리**: 동시 주문 시 재고 충돌 방지 + 재고 수량 초과 주문 방지
 
-### 시스템 기능
-- [x] **JWT 이중 토큰** (Access/Refresh)
-- [x] **Redis 토큰 블랙리스트**
-- [x] **권한 기반 접근 제어** (@PreAuthorize)
-- [x] **자동 토큰 갱신** (Access Token 만료시 Refresh Token으로 자동 갱신)
-- [x] **개인정보 암호화** (AES-256-GCM 전화번호 암호화)
-- [x] **멀티 프로파일 환경** (dev/prod 환경 분리)
-- [x] **동시성 제어** (낙관적 락)
-- [x] **이메일 자동 발송** (가입/비밀번호 재설정/결제완료)
-- [x] **로그인 보안 강화** (IP/디바이스 추적)
-- [x] **디바이스 타입 감지** (Mobile/Tablet/Desktop 자동 분류)
-- [x] **파일 업로드 보안** (크기 제한/타입 검증)
-- [x] **구조적 로깅 시스템** (레벨별/패키지별 분리)
-- [x] **상세 예외 처리** (커스텀 예외)
-- [x] **3단계 상품 구조** (마스터/품목/재고)
-- [x] **재고 변동 이력 관리**
-- [x] **주문 라이프사이클 관리** (완전한 주문 프로세스)
-- [x] **부분 취소/반품/교환** (개별 상품 단위)
-- [x] **배송 이력 추적** (송장번호/배송업체/배송상태)
-- [x] **포트원 결제 연동** (준비/검증/취소/웹훅)
-- [x] **결제 보안 시스템** (로그 마스킹/비동기 처리)
-- [x] **결제 이력 관리** (다양한 기준 조회/검색)
-- [x] **리뷰 시스템** (주문 검증/중복 방지/권한 관리)
-- [x] **이미지 관리 시스템** (업로드/서빙/유효성 검사)
-- [x] **환경변수 관리** (.env 파일 자동 로딩)
-- [x] **UTF-8 완전 지원** (DB/서블릿/로그 전체)
-- [x] **트랜잭션 관리** (REPEATABLE_READ 격리 수준)
+### 💳 결제 & 주문 관리
+- [ ] **안전한 결제 시스템**: 포트원 테스트 버전 연동 + 웹훅 실시간 동기화 *(개발 중)*
+- [ ] **결제 완료 처리**: 결제 성공 후 DB 기록 및 상태 업데이트 *(개발 중)*
+- [ ] **주문 상태 관리**: 결제대기→결제완료→배송중→배송완료 흐름 *(개발 중)*
+- [ ] **반품/취소/교환**: 관리자 및 회원 요청 처리 시스템 *(개발 중)*
 
-## 🏗 프로젝트 구조 ⚠️(검토 요망)
+### 📝 리뷰 시스템
+- [x] **검증된 리뷰**: 실제 구매 고객만 작성 가능 + 중복 방지
+- [x] **편리한 리뷰 관리**: 수정/삭제 + 상품별 리뷰 조회
 
-```
-portfolio-ecommerce/
-├── gyp_portfolio_shoppingmall/          # 백엔드 (Spring Boot)
-│   ├── src/main/java/
-│   ├── src/main/resources/
-│   └── build.gradle
-├── gyp_portfolio_shoppingmall_frontend/ # 프론트엔드 (React)
-│   ├── src/
-│   ├── public/
-│   └── package.json
-└── README.md
-```
+### 🔧 관리자 대시보드
+- [ ] **종합 비즈니스 관리**: 회원/상품/주문/결제 통합 관리 *(개발 중)*
+- [x] **실시간 통계**: 매출/주문/회원 현황
+- [x] **고급 검색 시스템**: 다양한 조건으로 데이터 필터링 및 검색
 
-## 🚦 시작하기 ⚠️(검토 요망)
+### 📱 사용자 경험
+- [x] **완전 반응형**: 모바일/태블릿/데스크탑 모든 디바이스 최적화
+- [x] **직관적 UI**: Ant Design 기반 일관된 디자인 시스템
+- [x] **스마트 네비게이션**: 권한별 메뉴 + 이전 페이지 복원
+
+## 🚧 개발 현황 및 로드맵
+
+### 현재 완성도: 85%
+
+#### ✅ 완료된 주요 기능
+- 회원 관리 시스템 (가입, 로그인, 정보 수정, 탈퇴)
+- 상품 관리 및 검색 시스템 (카테고리별 조회, 키워드 검색)
+- 장바구니 및 주문 생성 프로세스
+- 포트원 결제창 연동 (테스트 환경)
+- 관리자 대시보드 (회원/상품/리뷰 관리)
+- 리뷰 시스템 (작성, 수정, 삭제)
+- JWT 이중 토큰 인증 시스템
+- 반응형 UI/UX 디자인
+
+#### 🔄 개발 진행 중
+- **결제 완료 처리**: 포트원 테스트 결제 성공 후 DB 기록 시스템
+- **주문 상태 관리**: 결제대기→결제완료→배송중→배송완료 상태 전환 로직
+- **반품/취소/교환**: 관리자 및 회원 요청 처리 워크플로우
+
+#### 📅 향후 개발 계획
+- 결제 시스템 완성 및 주문 관리 시스템 구현
+- 관리자 주문 처리 기능 고도화
+- 성능 최적화 및 사용자 경험 개선
+
+### 📝 알려진 제한사항
+- 현재 결제 테스트는 포트원 테스트 환경에서만 가능
+- 일부 관리자 주문 처리 기능은 UI만 구현되어 있음
+- 결제 성공 후 DB 동기화 로직 개발 중
+
+## 🚦 시작하기
 
 ### 필수 요구사항
-- Java 17+
-- Node.js 14+
-- MariaDB 10.6+
-- Redis 6.0+
+- **Java 17+** (OpenJDK 권장)
+- **Node.js 16+** & **npm 8+**
+- **MariaDB 10.6+**
+- **Redis 6.0+**
+- **Git 2.30+**
 
-### 환경 설정
+### 🔧 로컬 개발 환경 설정
 
 #### 1. 저장소 클론
 ```bash
-git clone [repository-url]
-cd portfolio-ecommerce
+git clone https://github.com/Srable666/portfolio_shoppingmall_integrated
+cd portfolio_shoppingmall_integrated
 ```
 
-#### 2. 백엔드 설정
+#### 2. 데이터베이스 설정
+
+##### 방법 1: 스키마 파일 사용 (권장)
+```bash
+# 프로젝트에서 제공하는 스키마 파일로 데이터베이스 생성
+mysql -u root -p < gyp_portfolio_shoppingmall/database/portfolio_shopping_mall_schema.sql
+```
+
+##### 방법 2: 수동 생성
+```sql
+-- MariaDB 접속 후 실행
+CREATE DATABASE portfolio_shopping_mall_dev CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+CREATE USER 'portfolio_user'@'localhost' IDENTIFIED BY 'your_password';
+GRANT ALL PRIVILEGES ON portfolio_shopping_mall_dev.* TO 'portfolio_user'@'localhost';
+FLUSH PRIVILEGES;
+```
+
+> 💡 **참고**: 
+> - 스키마 파일에는 **13개 테이블**의 완전한 구조가 포함되어 있습니다
+> - 테스트 데이터는 별도로 제공되지 않으므로, 애플리케이션 실행 후 회원가입/상품등록을 통해 데이터를 생성하세요
+
+#### 3. Redis 서버 실행
+```bash
+# macOS (Homebrew)
+brew services start redis
+
+# Ubuntu/Debian
+sudo systemctl start redis-server
+
+# Windows
+redis-server
+```
+
+#### 4. 백엔드 환경 설정
 ```bash
 cd gyp_portfolio_shoppingmall
-# application.properties 설정 (별도 제공)
-./gradlew bootRun
+
+# .env 파일 생성 (프로젝트 루트에)
+touch .env
 ```
 
-#### 3. 프론트엔드 설정
+**.env 파일 내용 (필수 환경변수)**:
+```env
+# 데이터베이스 설정
+SPRING_PROFILES_ACTIVE=dev
+DB_URL=jdbc:mariadb://localhost:3306/portfolio_shopping_mall_dev
+DB_USERNAME=root  # 또는 생성한 사용자
+DB_PASSWORD=your_password
+
+# Redis 설정
+REDIS_HOST=localhost
+REDIS_PORT=6379
+
+# JWT 토큰 설정
+JWT_ACCESS_TOKEN_SECRET=your_access_token_secret_key_here
+JWT_REFRESH_TOKEN_SECRET=your_refresh_token_secret_key_here
+JWT_ACCESS_TOKEN_EXPIRATION=900000
+JWT_REFRESH_TOKEN_EXPIRATION=604800000
+
+# 이메일 설정 (Gmail)
+MAIL_USERNAME=your_email@gmail.com
+MAIL_PASSWORD=your_app_password
+
+# 포트원 결제 테스트 설정
+PORTONE_API_API_SECRET=your_portone_api_secret
+PORTONE_API_PG_STORE_ID=your_store_id
+PORTONE_API_PG_SECRET_KEY=your_pg_secret_key
+PORTONE_API_PG_CLIENT_KEY=your_pg_client_key
+PORTONE_API_BASE_URL=https://api.portone.io
+
+# 암호화 설정
+PHONE_ENCRYPTION_KEY=your_32_character_encryption_key
+PHONE_ENCRYPTION_SALT=your_16_character_salt
+
+# 도메인 설정
+APP_DOMAIN=http://localhost:3000
+```
+
+#### 5. 백엔드 실행
 ```bash
-cd gyp_portfolio_shoppingmall_frontend
+# 권한 부여 (macOS/Linux)
+chmod +x ./gradlew
+
+# 의존성 설치 및 실행
+./gradlew bootRun
+
+# 또는 Windows
+gradlew.bat bootRun
+```
+
+#### 6. 프론트엔드 설정 및 실행
+```bash
+cd ../gyp_portfolio_shoppingmall_frontend
+
+# 의존성 설치
 npm install
+
+# 개발 서버 실행
 npm start
 ```
 
-#### 4. 데이터베이스 설정
-```sql
--- 데이터베이스 생성 및 테이블 스키마 (별도 제공)
-```
-
-## 📺 데모 ⚠️(검토 요망)
-
-### 라이브 데모
-🔗 **[Live Demo]()**  
-*AWS Lightsail에서 호스팅 중*
-
-### 스크린샷
-*(스크린샷 이미지들 추가 예정)*
-
-## 🔧 개발 과정 ⚠️(검토 요망)
-
-### 아키텍처 설계
-- 요구사항 분석 및 데이터 모델링
-- RESTful API 설계
-- 보안 아키텍처 구성
-- 동시성 제어 전략 수립
-
-### 백엔드 개발 하이라이트
-- Spring Security + JWT 보안 구현
-- MyBatis 기반 데이터 액세스 계층
-- AOP를 활용한 트랜잭션/락 관리
-- 포트원 결제 연동 및 웹훅 처리
-- 이메일 자동 발송 시스템
-
-### 프론트엔드 개발 하이라이트
-- React 18 + Ant Design 모던 UI
-- JWT 토큰 기반 인증 상태 관리
-- 반응형 디자인 (모바일 최적화)
-- 관리자/사용자 대시보드 구현
-
-## 📊 성능 및 보안 ⚠️(검토 요망)
-
-### 성능 최적화
-- 데이터베이스 인덱스 최적화
-- JWT 토큰 효율적 관리
-- React 컴포넌트 최적화
-- 이미지 및 정적 자원 최적화
-
-### 보안 강화
-- HTTPS 강제 적용
-- JWT 토큰 보안 (이중 구조)
-- SQL 인젝션 방지
-- XSS/CSRF 보호
-- 비밀번호 암호화 (BCrypt)
-
-## 🧪 테스트 ⚠️(검토 요망)
-
-### API 테스트
-- Postman을 활용한 전 API 엔드포인트 테스트
-- 인증/권한 테스트
-- 예외 상황 테스트
-
-### 통합 테스트
-- 결제 프로세스 테스트
-- 주문/배송 워크플로우 테스트
-- 관리자 기능 테스트
-
-## 📝 API 문서 ⚠️(검토 요망)
-
-### 주요 엔드포인트
-```
-# 인증
-POST /api/auth/login
-POST /api/auth/refresh
-
-# 상품
-GET /api/products
-POST /api/admin/products
-
-# 주문
-POST /api/orders
-GET /api/orders/my
-
-# 결제
-POST /api/payment/prepare
-POST /api/payment/webhook
-```
-
-*상세 API 문서는 별도 제공*
-
-## 🚀 배포 ⚠️(검토 요망)
-
-### 프로덕션 환경
-- **서버**: AWS Lightsail
-- **도메인**: Cloudflare 관리
-- **프록시**: Nginx
-- **SSL**: Let's Encrypt
-
-### 배포 명령어
+#### 7. 프론트엔드 환경변수 설정
 ```bash
-# 백엔드 빌드 및 배포
-./gradlew build
-java -jar build/libs/app.jar
-
-# 프론트엔드 빌드 및 배포  
-npm run build
-# 정적 파일을 서버에 배포
+# .env 파일 생성 (프론트엔드 루트에)
+touch .env
 ```
 
-## 🛣 로드맵 ⚠️(검토 요망)
+**.env 파일 내용**:
+```env
+# 포트원 클라이언트 키 (결제 테스트용)
+REACT_APP_PORTONE_IMP=your_portone_imp_code
+```
 
-### Phase 1 (완료 70%)
-- [x] 기본 CRUD 기능
-- [x] JWT 인증 시스템
-- [x] 결제 연동 (테스트)
-- [ ] UI/UX 완성
+### 🌐 접속 정보
+- **프론트엔드**: http://localhost:3000
+- **관리자 로그인**: http://localhost:3000/admin/login
+- **백엔드 API**: http://localhost:8080/gyp-shopping-mall
 
-### Phase 2 (계획)
-- [ ] 검색 엔진 최적화
-- [ ] 성능 모니터링
-- [ ] 로그 시스템 고도화
-- [ ] 테스트 케이스 확장
+### 🔧 트러블슈팅
 
-### Phase 3 (향후)
-- [ ] Docker 컨테이너화
-- [ ] CI/CD 파이프라인
-- [ ] 마이크로서비스 분할
-- [ ] 캐시 시스템 고도화
+<details>
+<summary><strong>포트 충돌 오류</strong></summary>
 
-## 🤝 기여 ⚠️(검토 요망)
+**문제**: `Port 8080 already in use`
+**해결**: 
+```bash
+# 포트 사용 중인 프로세스 확인
+lsof -i :8080  # macOS/Linux
+netstat -ano | findstr :8080  # Windows
 
-이 프로젝트는 포트폴리오 목적으로 개발되었습니다. 피드백이나 개선 제안은 언제나 환영합니다.
+# 프로세스 종료 후 재실행
+```
+</details>
 
-## 📄 라이선스 ⚠️(검토 요망)
+<details>
+<summary><strong>스키마 파일 실행 오류</strong></summary>
 
-이 프로젝트는 포트폴리오 목적으로 개발되었으며, 상업적 사용을 금지합니다.
+**문제**: `ERROR 1049: Unknown database`
+**해결**: 
+1. MariaDB 서버가 실행 중인지 확인
+2. 파일 경로가 정확한지 확인
+3. 권한 문제 시: `mysql -u root -p --default-character-set=utf8mb4 < 파일경로`
+</details>
 
-## 📞 연락처 ⚠️(검토 요망)
+<details>
+<summary><strong>데이터베이스 연결 오류</strong></summary>
+
+**문제**: `Connection refused` 또는 `Access denied`
+**해결**:
+1. MariaDB 서버 실행 확인
+2. `.env` 파일의 데이터베이스 정보 확인
+3. 방화벽 설정 확인
+</details>
+
+<details>
+<summary><strong>Redis 연결 오류</strong></summary>
+
+**문제**: `Could not connect to Redis`
+**해결**:
+```bash
+# Redis 서버 상태 확인
+redis-cli ping  # PONG 응답 확인
+
+# Redis 서버 재시작
+sudo systemctl restart redis-server
+```
+</details>
+
+<details>
+<summary><strong>환경변수 로딩 오류</strong></summary>
+
+**문제**: `Failed to load .env file`
+**해결**:
+1. `.env` 파일이 프로젝트 루트에 있는지 확인
+2. 파일 권한 확인: `chmod 644 .env`
+3. 환경변수 형식 확인 (공백, 특수문자 등)
+</details>
+
+### 📚 추가 리소스
+- **데이터베이스 스키마**: [portfolio_shopping_mall_schema.sql](./gyp_portfolio_shoppingmall/database/portfolio_shopping_mall_schema.sql)
+- **포트원 결제 테스트**: [포트원 개발자 문서](https://developers.portone.io/docs)
+- **환경 설정 가이드**: 위의 '시작하기' 섹션 참조
+
+### 🔗 관련 기술 문서
+- **Spring Boot**: [공식 문서](https://spring.io/projects/spring-boot)
+- **React**: [공식 문서](https://react.dev/)
+- **Ant Design**: [컴포넌트 라이브러리](https://ant.design/)
+
+### ⚠️ 주의사항
+- **실제 결제 방지**: 포트원 테스트 키만 사용하세요
+- **환경변수 보안**: `.env` 파일을 Git에 커밋하지 마세요
+- **포트 확인**: 8080(백엔드), 3000(프론트엔드) 포트가 사용 가능한지 확인하세요
+
+## 🔧 개발 과정
+
+### 📋 핵심 개발 여정
+- **프로젝트 규모**: 13개 테이블, 60여 개 API, 20여 개 프론트엔드 페이지
+- **주요 기술적 도전**: 
+  - 3단계 상품 구조 설계 (상품 마스터 → 상품 품목 → 재고 관리)
+  - 동시성 제어 (낙관적 락 + 비관적 락 조합)
+  - 포트원 결제 시스템 연동 (V1 API + 웹훅 처리)
+  - 전화번호 AES-256 암호화 (PBKDF2 + AES)
+  - JWT 이중 토큰 + Redis 블랙리스트 구현
+  - 13개 테이블 트랜잭션 격리 수준 REPEATABLE_READ 적용
+  - 모바일/데스크톱 반응형 디자인 구현
+
+### 🛠️ 개발 단계별 하이라이트
+1. **인프라 구축** 
+   - AWS Lightsail + MariaDB + Redis 환경 구성
+   - Cloudflare 도메인 + HTTPS 보안 적용
+   - 개발/스테이징/운영 환경 분리
+
+2. **백엔드 핵심 시스템**
+   - Spring Security + JWT 이중 토큰 구조
+   - 13개 테이블 3단계 상품 구조 설계
+   - 60여 개 RESTful API 구현
+   - 동시성 제어 (낙관적 락 + 비관적 락)
+
+3. **결제 시스템 연동**
+   - 포트원 V1 API 연동 및 웹훅 처리
+   - 데스크톱 팝업 + 모바일 리디렉션 방식
+   - 결제 상태 실시간 동기화
+
+4. **프론트엔드 개발**
+   - React 18 + Ant Design 5 기반
+   - 20여 개 페이지 (사용자 + 관리자)
+   - Context API 기반 상태 관리
+   - 768px 기준 반응형 디자인
+
+5. **보안 및 최적화**
+   - 전화번호 AES-256 암호화 (PBKDF2)
+   - API 로직 표준화 및 예외 처리
+   - 환경변수 기반 보안 설정
+   - 깃허브 배포 및 문서화
+
+### 📚 상세 개발 과정
+전체 개발 과정의 상세한 기록과 기술적 의사결정 과정은 아래 링크에서 확인하실 수 있습니다.
+
+**👉 [상세 개발 과정 보기 (Notion)](https://mysterious-meteoroid-685.notion.site/23219636adbd8091b0e9c8f29cebba3a?source=copy_link)**
+
+## 📞 연락처 ⚠️(미완성/검토 요망)
 
 - **개발자**: 권용필
 - **이메일**: srable6666@gmail.com

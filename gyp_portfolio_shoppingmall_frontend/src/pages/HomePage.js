@@ -184,7 +184,7 @@ const HomePage = () => {
                     <div className="banner-title">🎯 PORTFOLIO DEMO SITE</div>
                     <div className="banner-subtitle">개발 포트폴리오 목적으로 제작된 쇼핑몰 데모입니다</div>
                     <div className="banner-description">This is a portfolio demo shopping mall for development showcase</div>
-                    <div className="demo-badge">실제 결제 및 배송 불가</div>
+                    <div className="demo-badge">실제 결제/배송 불가 • 상품 이미지: 무신사 제공</div>
                     <div className="contact-info">
                         <span className="contact-email">📧 contact: srable6666@gmail.com</span>
                     </div>

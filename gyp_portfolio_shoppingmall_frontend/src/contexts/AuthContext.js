@@ -150,49 +150,49 @@ export const AuthProvider = ({ children }) => {
     };
 
     // 로그아웃 처리
-const logout = useCallback(async (options = {}) => {
-    const { 
-        skipApiCall = false, 
-        isWithdraw = false,
-        reason = 'manual' // 'manual', 'tokenExpired', 'unauthorized', 'withdraw'
-    } = options;
-        // 회원탈퇴 처리 여부 구분
-        if (isWithdraw) {
-            setIsWithdrawing(true);
-        }
-
-        let response = null;
-
-        // 로그아웃 처리
-        if (!skipApiCall) {
-            try {
-                response = await apiClient.post('/user/logout');
-            } catch (error) {
-                console.warn('서버 로그아웃 API 호출 실패:', error);
+    const logout = useCallback(async (options = {}) => {
+        const { 
+            skipApiCall = false, 
+            isWithdraw = false,
+            reason = 'manual' // 'manual', 'tokenExpired', 'unauthorized', 'withdraw'
+        } = options;
+            // 회원탈퇴 처리 여부 구분
+            if (isWithdraw) {
+                setIsWithdrawing(true);
             }
-        }
 
-        // 상태 초기화
-        setAccessToken(null);
-        setIsAuthenticated(false);
-        setUser(null);
-        sessionStorage.removeItem('accessToken');
-        localStorage.removeItem('isAdmin');
-    
-        // 회원탈퇴 처리
-        if (isWithdraw) {
-            setTimeout(() => {
-                setIsWithdrawing(false);
-            }, 500);
-        }
+            let response = null;
 
-        // 로그아웃 이유에 따른 추가 처리
-        if (reason === 'tokenExpired') {
-            console.log('토큰 만료로 인한 자동 로그아웃');
-        }
+            // 로그아웃 처리
+            if (!skipApiCall) {
+                try {
+                    response = await apiClient.post('/user/logout');
+                } catch (error) {
+                    console.warn('서버 로그아웃 API 호출 실패:', error);
+                }
+            }
 
-        return response;
-    }, [apiClient]);
+            // 상태 초기화
+            setAccessToken(null);
+            setIsAuthenticated(false);
+            setUser(null);
+            sessionStorage.removeItem('accessToken');
+            localStorage.removeItem('isAdmin');
+        
+            // 회원탈퇴 처리
+            if (isWithdraw) {
+                setTimeout(() => {
+                    setIsWithdrawing(false);
+                }, 500);
+            }
+
+            // 로그아웃 이유에 따른 추가 처리
+            if (reason === 'tokenExpired') {
+                console.log('토큰 만료로 인한 자동 로그아웃');
+            }
+
+            return response;
+        }, [apiClient]);
 
     // 비밀번호 재설정 이메일 발송
     const sendPasswordResetEmail = async (email) => {
