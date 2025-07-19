@@ -104,3 +104,10 @@ dependencies {
    // 환경변수 처리
    implementation 'org.springframework.boot:spring-boot-configuration-processor'
 }
+
+// MyBatis 매퍼 파일 처리
+processResources {
+   from('src/main/java') {
+      include '**/*.xml'
+   }
+}
