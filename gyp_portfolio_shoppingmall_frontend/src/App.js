@@ -1,5 +1,4 @@
 import './App.css';
-import logo from './logo.svg';
 
 import { App as AntApp, ConfigProvider } from 'antd';
 import { createGlobalStyle } from 'styled-components';
