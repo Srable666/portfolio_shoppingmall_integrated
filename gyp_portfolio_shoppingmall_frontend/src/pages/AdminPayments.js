@@ -100,6 +100,16 @@ const TableContainer = styled.div`
     overflow: auto;
 `;
 
+// 테이블 셀 클릭 버튼
+const ClickableCellButton = styled(Button)`
+    padding: 2px 4px;
+    margin: 0;
+    height: auto;
+    line-height: inherit;
+    border-radius: 4px;
+    transition: all 0.3s;
+`;
+
 // 상세 정보 모달
 const DetailModal = styled(Modal)`
     ${modalSizeStyle(800)}
@@ -195,6 +205,19 @@ const AdminPayments = () => {
 
     
     //#region API Functions
+    // 총 결제 수 조회
+    const fetchPaymentCount = useCallback(async () => {
+        if (!user) return;
+        
+        try {
+            const response = await authRequest('get', '/payment/count');
+            return response.data;
+        } catch (error) {
+            console.error('결제 수 조회 에러:', error);
+            return 0;
+        }
+    }, [authRequest, user]);
+
     // 결제 목록 조회
     const fetchPayments = useCallback(async () => {
         if (!user) return;
@@ -202,18 +225,44 @@ const AdminPayments = () => {
         try {
             setLoading(true);
 
-            const response = await authRequest('get', '/payment/historyListForAdmin', {
-                offset: (currentPage - 1) * pageSize,
-                size: pageSize,
+            const requestParams = { 
                 ...searchConditions
-            });
+            };
 
-            setPayments({
-                items: Array.isArray(response.data.items) ? response.data.items : [],
-                totalCount: response.data.totalCount || 0,
-                currentPage: response.data.currentPage || currentPage,
-                pageSize: response.data.pageSize || pageSize
-            });
+            // 검색 조건이 있는지 확인
+            const hasSearchConditions = searchConditions.impUid || 
+                                        searchConditions.merchantUid || 
+                                        searchConditions.customerEmail ||
+                                        searchConditions.startDate || 
+                                        searchConditions.endDate;
+
+            // 검색 조건이 없을 때만 페이징 파라미터 추가
+            if (!hasSearchConditions) {
+                requestParams.offset = (currentPage - 1) * pageSize;
+                requestParams.size = pageSize;
+            }
+
+            const response = await authRequest('get', '/payment/historyListForAdmin', requestParams);
+            const paymentData = response.data || [];
+
+            if (hasSearchConditions) {
+                // 검색 시: 전체 결과를 받았으므로 정확한 개수 설정
+                setPayments({
+                    items: paymentData,
+                    totalCount: paymentData.length,
+                    currentPage: 1,
+                    pageSize: pageSize
+                });
+            } else {
+                // 일반 조회 시: 전체 결제 수 조회
+                const totalCount = await fetchPaymentCount();
+                setPayments({
+                    items: paymentData,
+                    totalCount: totalCount,
+                    currentPage: currentPage,
+                    pageSize: pageSize
+                });
+            }
         } catch (error) {
             console.error('결제 목록 조회 에러:', error);            
             if (!error.response) {
@@ -224,7 +273,15 @@ const AdminPayments = () => {
         } finally {
             setLoading(false);
         }
-    }, [authRequest, currentPage, pageSize, searchConditions, message, user]);
+    }, [
+        authRequest, 
+        currentPage, 
+        pageSize, 
+        searchConditions, 
+        message, 
+        user, 
+        fetchPaymentCount
+    ]);
     //#endregion API Functions
 
 
@@ -235,6 +292,7 @@ const AdminPayments = () => {
             startDate: dateRange?.[0] ? dateRange[0].format() : '',
             endDate: dateRange?.[1] ? dateRange[1].format() : '',
         };
+
         if (searchKeyword) {
             newSearchConditions[searchType] = searchKeyword;
         }
@@ -307,8 +365,9 @@ const AdminPayments = () => {
             key: 'impUid',
             align: 'center',
             render: (impUid) => (
-                <Button 
+                <ClickableCellButton 
                     type="link" 
+                    className="clickable-cell"
                     onClick={() => {
                         setSearchType('impUid');
                         setSearchKeyword(impUid);
@@ -321,10 +380,9 @@ const AdminPayments = () => {
                         });
                         setCurrentPage(1);
                     }}
-                    className="clickable-cell"
                 >
                     {impUid}
-                </Button>
+                </ClickableCellButton>
             )
         },
         {
@@ -333,8 +391,9 @@ const AdminPayments = () => {
             key: 'merchantUid',
             align: 'center',
             render: (merchantUid) => (
-                <Button 
+                <ClickableCellButton 
                     type="link" 
+                    className="clickable-cell"
                     onClick={() => {
                         setSearchType('merchantUid');
                         setSearchKeyword(merchantUid);
@@ -346,10 +405,34 @@ const AdminPayments = () => {
                             endDate: ''
                         });
                     }}
-                    className="clickable-cell"
                 >
                     {merchantUid}
-                </Button>
+                </ClickableCellButton>
+            )
+        },
+        {
+            title: '회원 이메일',
+            dataIndex: 'customerEmail',
+            key: 'customerEmail',
+            align: 'center',
+            render: (customerEmail) => (
+                <ClickableCellButton 
+                    type="link" 
+                    className="clickable-cell"
+                    onClick={() => {
+                        setSearchType('customerEmail');
+                        setSearchKeyword(customerEmail);
+                        setSearchConditions({
+                            impUid: '',
+                            merchantUid: '',
+                            customerEmail: customerEmail,
+                            startDate: '',
+                            endDate: ''
+                        });
+                    }}
+                >
+                    {customerEmail}
+                </ClickableCellButton>
             )
         },
         {
@@ -382,12 +465,6 @@ const AdminPayments = () => {
                 { text: '결제실패', value: 'FAILED' }
             ],
             onFilter: (value, record) => record.status === value
-        },
-        {
-            title: '고객명',
-            dataIndex: 'customerName',
-            key: 'customerName',
-            align: 'center'
         },
         {
             title: '작업',
@@ -536,7 +613,8 @@ const AdminPayments = () => {
                             setCurrentPage(page);
                             setPageSize(pageSize);
                         },
-                        position: ['bottomCenter']
+                        position: ['bottomCenter'],
+                        showTotal: (total, range) => `${range[0]}-${range[1]} / 총 ${total}건`,
                     }}
                     scroll={{ x: 'max-content' }}
                     size="small"

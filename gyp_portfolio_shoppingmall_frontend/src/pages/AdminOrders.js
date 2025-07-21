@@ -117,10 +117,6 @@ const ClickableCellButton = styled(Button)`
     line-height: inherit;
     border-radius: 4px;
     transition: all 0.3s;
-
-    &:hover {
-        background-color: #f5f5f5;
-    }
 `;
 
 // 주문 상세 정보 모달
@@ -225,6 +221,7 @@ const AdminOrders = () => {
     const [orders, setOrders] = useState([]);
     const [pageSize, setPageSize] = useState(10);
     const [loading, setLoading] = useState(false);
+    const [totalCount, setTotalCount] = useState(0);
     const [dateRange, setDateRange] = useState(null);
     const [sortField, setSortField] = useState(null);
     const [sortOrder, setSortOrder] = useState(null);
@@ -467,6 +464,23 @@ const AdminOrders = () => {
     
 
     //#region API Functions
+    // 전체 주문 수 조회
+    const fetchOrderCount = useCallback(async () => {
+        if (!user) return;
+        
+        try {
+            const response = await authRequest('get', '/order/count');
+            setTotalCount(response.data);
+        } catch (error) {
+            console.error('주문 수 조회 에러:', error);
+            if (!error.response) {
+                message.warning('네트워크 연결을 확인해주세요.');
+            } else {
+                message.error(error.response.data || '예기치 못한 오류로 주문 수 조회에 실패했습니다.');
+            }
+        }
+    }, [authRequest, message, user]);
+
     // 주문 목록 조회
     const fetchOrders = useCallback(async (params) => {
         if (!user) return;
@@ -474,22 +488,37 @@ const AdminOrders = () => {
         try {
             setLoading(true);
             
+            const requestParams = { 
+                merchantUid: params.merchantUid || '',
+                userEmail: params.userEmail || '',
+                startDate: params.startDate || '',
+                endDate: params.endDate || '',
+                sortField: params.sortField || sortField || '',
+                sortOrder: params.sortOrder || sortOrder || ''
+            };
+
+            // 검색 조건이 없을 때만 페이징 파라미터 추가
+            const hasSearchConditions = params.merchantUid || params.userEmail || params.startDate || params.endDate;
+            
+            if (!hasSearchConditions) {
+                requestParams.page = params.page || 1;
+                requestParams.size = params.size || pageSize;
+            }
+            
             const response = await authRequest(
                 'get', 
                 '/order/orderListForAdmin', 
-                { 
-                    merchantUid: params.merchantUid || '',
-                    userEmail: params.userEmail || '',
-                    startDate: params.startDate || '',
-                    endDate: params.endDate || '',
-                    page: params.page || 1,
-                    size: params.size || pageSize,
-                    sortField: params.sortField || sortField || '',
-                    sortOrder: params.sortOrder || sortOrder || ''
-                }
+                requestParams
             );
 
-            setOrders(response.data);
+            const orderData = response.data || [];
+            setOrders(orderData);
+
+            if (hasSearchConditions) {
+                setTotalCount(orderData.length);
+            } else {
+                await fetchOrderCount();
+            }
         } catch (error) {
             console.error('주문 목록 조회 에러:', error);            
             if (!error.response) {
@@ -500,7 +529,15 @@ const AdminOrders = () => {
         } finally {
             setLoading(false);
         }
-    }, [authRequest, pageSize, sortField, sortOrder, message, user]);
+    }, [
+        authRequest, 
+        pageSize, 
+        sortField, 
+        sortOrder, 
+        message, 
+        user, 
+        fetchOrderCount
+    ]);
 
     // 배송 이력 조회
     const fetchOrderDeliveryHistory = useCallback(async (record) => {
@@ -548,16 +585,27 @@ const AdminOrders = () => {
     //#region Data Management Functions
     // 현재 검색 조건으로 주문 목록 로드
     const loadOrderList = useCallback(async () => {
-        return fetchOrders({
+        const hasSearchConditions = searchConditions.merchantUid || 
+                                    searchConditions.userEmail || 
+                                    searchConditions.dateRange?.[0] || 
+                                    searchConditions.dateRange?.[1];
+        
+        const params = {
             merchantUid: searchConditions.merchantUid,
             userEmail: searchConditions.userEmail,
             startDate: searchConditions.dateRange?.[0] ? searchConditions.dateRange[0].format() : '',
             endDate: searchConditions.dateRange?.[1] ? searchConditions.dateRange[1].format() : '',
-            page: currentPage,
-            size: pageSize,
             sortField,
             sortOrder
-        });
+        };
+
+        // 검색 조건이 없을 때만 페이징 파라미터 추가
+        if (!hasSearchConditions) {
+            params.page = currentPage;
+            params.size = pageSize;
+        }
+
+        return fetchOrders(params);
     }, [
         fetchOrders, 
         searchConditions, 
@@ -631,16 +679,27 @@ const AdminOrders = () => {
         setSearchConditions(conditions);
         setCurrentPage(1);
         
-        fetchOrders({
+        const hasSearchConditions = conditions.merchantUid || 
+                                    conditions.userEmail || 
+                                    conditions.dateRange?.[0] || 
+                                    conditions.dateRange?.[1];
+
+        const params = {
             merchantUid: conditions.merchantUid,
             userEmail: conditions.userEmail,
             startDate: conditions.dateRange?.[0] ? conditions.dateRange[0].format() : '',
             endDate: conditions.dateRange?.[1] ? conditions.dateRange[1].format() : '',
-            page: 1,
-            size: pageSize,
             sortField,
             sortOrder
-        });
+        };
+
+        // 검색 조건이 없을 때만 페이징 파라미터 추가
+        if (!hasSearchConditions) {
+            params.page = 1;
+            params.size = pageSize;
+        }
+        
+        fetchOrders(params);
     }
 
     // 테이블 변경 핸들러
@@ -1060,8 +1119,9 @@ const AdminOrders = () => {
     //#region Effect Hooks
     // 초기 데이터 로딩
     useEffect(() => {
+        fetchOrderCount();
         loadOrderList();
-    }, [loadOrderList]);
+    }, [fetchOrderCount, loadOrderList]);
 
     // 배송 모달 폼 초기화
     useEffect(() => {
@@ -1183,12 +1243,15 @@ const AdminOrders = () => {
                     pagination={{
                         current: currentPage,
                         pageSize: pageSize,
+                        total: totalCount,
                         onChange: (page, pageSize) => {
                             setCurrentPage(page);
                             setPageSize(pageSize);
                             loadOrderList();
                         },
                         position: ['bottomCenter'],
+
+                        showTotal: (total, range) => `${range[0]}-${range[1]} / 총 ${total}건`,
                     }}
                     onChange={handleTableChange}
                 />
@@ -1394,7 +1457,7 @@ const AdminOrders = () => {
             >
                 <Table
                     dataSource={(selectedHistoryRecord?.orderProductHistoryDTOList || [])
-                        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))}
+                        .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))}
                     pagination={false}
                     size="small"
                     columns={[

@@ -9,7 +9,7 @@ import {
 } from 'antd';
 import {
     SearchOutlined, EyeOutlined, 
-    DeleteOutlined, ShopOutlined
+    DeleteOutlined
 } from '@ant-design/icons';
 
 
@@ -138,12 +138,12 @@ const ButtonContainer = styled.div`
 
 // 클릭 가능한 셀 버튼 스타일 (테이블 내부에서만 사용)
 const ClickableCellButton = styled(Button)`
-    &.ant-btn {
-        padding: 2px 4px;
-        margin: 0;
-        height: auto;
-        line-height: inherit;
-    }
+    padding: 2px 4px;
+    margin: 0;
+    height: auto;
+    line-height: inherit;
+    border-radius: 4px;
+    transition: all 0.3s;
 `;
 
 // 테이블 셀 스타일
@@ -173,6 +173,7 @@ const AdminReviews = () => {
     const [reviews, setReviews] = useState([]);
     const [pageSize, setPageSize] = useState(10);
     const [loading, setLoading] = useState(false);
+    const [totalCount, setTotalCount] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
     const [searchKeyword, setSearchKeyword] = useState('');
     const [searchType, setSearchType] = useState('productCode');
@@ -182,6 +183,23 @@ const AdminReviews = () => {
 
 
     //#region API Functions
+    // 전체 리뷰 수 조회
+    const fetchReviewCount = useCallback(async () => {
+        if (!user) return;
+        
+        try {
+            const response = await authRequest('get', '/review/count');
+            setTotalCount(response.data);
+        } catch (error) {
+            console.error('리뷰 수 조회 에러:', error);
+            if (!error.response) {
+                message.warning('네트워크 연결을 확인해주세요.');
+            } else {
+                message.error(error.response.data || '예기치 못한 오류로 리뷰 수 조회에 실패했습니다.');
+            }
+        }
+    }, [authRequest, message, user]);
+
     // 리뷰 목록 가져오기
     const fetchReviews = useCallback(async (customParams) => {
         if (!user) return;
@@ -189,13 +207,28 @@ const AdminReviews = () => {
         try {
             setLoading(true);
 
-            const response = await authRequest('get', '/review/list', {
-                offset: (currentPage - 1) * pageSize,
-                size: pageSize,
+            const params = {
                 ...customParams
-            });
+            };
 
-            setReviews(response.data);
+            // 검색 조건이 있는지 확인
+            const hasSearchConditions = params.productCode || params.userEmail;
+
+            // 검색 조건이 없을 때만 페이징 파라미터 추가
+            if (!hasSearchConditions) {
+                params.offset = (currentPage - 1) * pageSize;
+                params.size = pageSize;
+            }
+
+            const response = await authRequest('get', '/review/list', params);
+            const reviewData = response.data || [];
+            setReviews(reviewData);
+
+            if (hasSearchConditions) {
+                setTotalCount(reviewData.length);
+            } else {
+                await fetchReviewCount();
+            }
         } catch (error) {
             console.error('리뷰 목록 조회 에러:', error);
             if (!error.response) {
@@ -206,7 +239,7 @@ const AdminReviews = () => {
         } finally {
             setLoading(false);
         }
-    }, [authRequest, message, currentPage, pageSize, user]);
+    }, [authRequest, message, currentPage, pageSize, user, fetchReviewCount]);
 
     // 리뷰 삭제 처리
     const handleDeleteReview = useCallback(async (reviewId) => {
@@ -251,10 +284,7 @@ const AdminReviews = () => {
 
     // 검색 처리
     const handleSearch = (type, keyword) => {
-        const params = {
-            offset: (currentPage - 1) * pageSize,
-            size: pageSize,
-        };
+        const params = {};
         
         const searchValue = String(keyword || '');
         if (searchValue.trim()) {
@@ -272,8 +302,9 @@ const AdminReviews = () => {
     //#region Effect Hooks
     // 초기 데이터 로딩
     useEffect(() => {
+        fetchReviewCount();
         fetchReviews();
-    }, [fetchReviews]);
+    }, [fetchReviewCount, fetchReviews]);
 
     // 검색 초기화
     useEffect(() => {
@@ -284,9 +315,13 @@ const AdminReviews = () => {
     // 페이지 변경시 데이터 로딩
     useEffect(() => {
         if (currentPage > 1) {
-            fetchReviews();
+            const hasSearchConditions = searchKeyword.trim();
+
+            if (!hasSearchConditions) {
+                fetchReviews();
+            }
         }
-    }, [currentPage, pageSize, fetchReviews]);
+    }, [currentPage, pageSize, fetchReviews, searchKeyword]);
     //#endregion Effect Hooks
 
 
@@ -325,6 +360,7 @@ const AdminReviews = () => {
             render: (productCode, record) => (
                 <ClickableCellButton
                     type="link" 
+                    className="clickable-cell"
                     onClick={() => {handleSearch('productCode', record.productCode);}}
                 >
                     {productCode}
@@ -339,6 +375,7 @@ const AdminReviews = () => {
             render: (userEmail, record) => (
                 <ClickableCellButton 
                     type="link" 
+                    className="clickable-cell"
                     onClick={() => handleSearch('userEmail', record.userEmail)}
                 >
                     {userEmail}
@@ -383,11 +420,11 @@ const AdminReviews = () => {
             key: 'isDeleted',
             align: 'center',
             render: (isDeleted) => Number(isDeleted) === 0 ? 
-                <Tag color="success" style={{ margin: 0 }}>활성</Tag> : 
-                <Tag color="error" style={{ margin: 0 }}>삭제됨</Tag>,
+                <Tag color="success" style={{ margin: 0 }}>게시 중</Tag> : 
+                <Tag color="error" style={{ margin: 0 }}>삭제</Tag>,
             filters: [
-                { text: '활성', value: 0 },
-                { text: '삭제됨', value: 1 },
+                { text: '게시 중', value: 0 },
+                { text: '삭제', value: 1 },
             ],
             onFilter: (value, record) => record.isDeleted === value,
         },
@@ -425,8 +462,8 @@ const AdminReviews = () => {
             { 
                 label: '상태',
                 value: selectedReview.isDeleted === 0 ? 
-                    <Tag color="success">활성</Tag> : 
-                    <Tag color="error">삭제됨</Tag>
+                    <Tag color="success">게시 중</Tag> : 
+                    <Tag color="error">삭제</Tag>
             },
             { 
                 label: '작성일',
@@ -502,13 +539,13 @@ const AdminReviews = () => {
                     pagination={{
                         current: currentPage,
                         pageSize: pageSize,
+                        total: totalCount,
                         onChange: (page, pageSize) => {
                             setCurrentPage(page);
                             setPageSize(pageSize);
                         },
                         position: ['bottomCenter'],
-                        showSizeChanger: true,
-                        pageSizeOptions: ['10', '20', '50', '100'],
+                        showTotal: (total, range) => `${range[0]}-${range[1]} / 총 ${total}건`,
                     }}
                 />
             </TableContainer>
@@ -541,26 +578,27 @@ const AdminReviews = () => {
                             <Button 
                                 type="primary" 
                                 onClick={() => navigateToProduct(selectedReview.productName)}
-                                icon={<ShopOutlined />}
                             >
-                                상품 보기
+                                상품 정보
                             </Button>
-                            <Popconfirm
-                                title="이 리뷰를 삭제하시겠습니까?"
-                                onConfirm={() => {
-                                    handleDeleteReview(selectedReview.reviewId);
-                                    setDetailModalVisible(false);
-                                }}
-                                okText="예"
-                                cancelText="아니오"
-                            >
-                                <Button 
-                                    danger
-                                    icon={<DeleteOutlined />}
+                            {selectedReview.isDeleted === 0 && (
+                                <Popconfirm
+                                    title="이 리뷰를 삭제하시겠습니까?"
+                                    onConfirm={() => {
+                                        handleDeleteReview(selectedReview.reviewId);
+                                        setDetailModalVisible(false);
+                                    }}
+                                    okText="예"
+                                    cancelText="아니오"
                                 >
-                                    리뷰 삭제
-                                </Button>
-                            </Popconfirm>
+                                    <Button 
+                                        danger
+                                        icon={<DeleteOutlined />}
+                                    >
+                                        리뷰 삭제
+                                    </Button>
+                                </Popconfirm>
+                            )}
                         </ButtonContainer>
                     </ModalContent>
                 )}

@@ -52,4 +52,9 @@ public class PaymentHistoryDao {
     public long getTotalRevenue() {
         return s.selectOne("PaymentHistoryMapper.getTotalRevenue");
     }
+
+    // 총 결제 수 조회
+    public int getPaymentCount() {
+        return s.selectOne("PaymentHistoryMapper.getPaymentCount");
+    }
 }

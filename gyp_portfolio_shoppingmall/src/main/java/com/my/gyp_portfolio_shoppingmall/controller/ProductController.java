@@ -198,11 +198,11 @@ public class ProductController {
         try {
             productService.insertBulkProductInventory(bulkProductInventoryDTO);
 
-            return ResponseEntity.ok("상품 품목 대량 입고에 성공했습니다.");
+            return ResponseEntity.ok("상품 품목 입고에 성공했습니다.");
         } catch (ProductException.ProductItemNotFoundException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
-            log.error("상품 품목 대량 입고 처리 중 알 수 없는 오류가 발생했습니다.", e);
+            log.error("상품 품목 입고 처리 중 알 수 없는 오류가 발생했습니다.", e);
             return ResponseEntity.internalServerError().body("알 수 없는 오류로 상품 품목 대량 입고에 실패했습니다.");
         }
     }

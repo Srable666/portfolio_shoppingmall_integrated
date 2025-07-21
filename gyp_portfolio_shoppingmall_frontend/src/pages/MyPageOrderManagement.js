@@ -1418,9 +1418,9 @@ const OrderManagement = () => {
     const orderDetailColumns = useMemo(() => [
         {
             title: '상품명',
-            dataIndex: 'orderProduct.productName',
-            key: 'orderProduct.productName',
+            key: 'productName',
             align: 'center',
+            render: (_, record) => record.productName
         },
         {
             title: '상품 옵션',

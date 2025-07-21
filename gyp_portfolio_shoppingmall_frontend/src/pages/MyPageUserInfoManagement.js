@@ -296,12 +296,12 @@ const UserInfoManagement = () => {
     }, [authRequest, message, passwordForm, setActiveModal, setLoading]);
 
     // 회원 탈퇴
-    const withdrawUser = useCallback(async (password) => {
+    const withdrawUser = useCallback(async (values) => {
         try {
             setLoading(true);
 
             const response = await authRequest('post', '/user/delete', {
-                password: password
+                password: values.confirmPassword
             });
 
             message.success(response.data);
@@ -547,7 +547,7 @@ const UserInfoManagement = () => {
                         <Form.Item
                             name="addressDetail"
                             rules={[
-                                { required: false }
+                                { required: true, message: '상세주소를 입력해주세요.' }
                             ]}
                         >
                             <Input

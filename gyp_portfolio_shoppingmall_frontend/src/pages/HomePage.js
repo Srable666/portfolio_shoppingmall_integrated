@@ -192,27 +192,6 @@ const HomePage = () => {
             </PortfolioBannerContainer>
 
             <div>
-                <SectionTitle level={3}>새로운 상품</SectionTitle>
-                {loading ? (
-                    <LoadingContainer>
-                        <Spin size="large" tip="로딩 중...">
-                            <div style={{ minHeight: '200px' }} />
-                        </Spin>
-                    </LoadingContainer>
-                ) : (
-                    <ProductGrid 
-                        gutter={[16, 16]} 
-                        role="list" 
-                        aria-label="새로운 상품 목록"
-                    >
-                        {newProducts.map((product) => (
-                            <Col key={product.productId} xs={12} sm={8} md={6} lg={6}>
-                                <ProductMasterCard product={product} />
-                            </Col>
-                        ))}
-                    </ProductGrid>
-                )}
-
                 <SectionTitle level={3}>인기 상품</SectionTitle>
                 {loading ? (
                     <LoadingContainer>
@@ -227,6 +206,27 @@ const HomePage = () => {
                         aria-label="인기 상품 목록"
                     >
                         {popularProducts.map((product) => (
+                            <Col key={product.productId} xs={12} sm={8} md={6} lg={6}>
+                                <ProductMasterCard product={product} />
+                            </Col>
+                        ))}
+                    </ProductGrid>
+                )}
+
+                <SectionTitle level={3}>새로운 상품</SectionTitle>
+                {loading ? (
+                    <LoadingContainer>
+                        <Spin size="large" tip="로딩 중...">
+                            <div style={{ minHeight: '200px' }} />
+                        </Spin>
+                    </LoadingContainer>
+                ) : (
+                    <ProductGrid 
+                        gutter={[16, 16]} 
+                        role="list" 
+                        aria-label="새로운 상품 목록"
+                    >
+                        {newProducts.map((product) => (
                             <Col key={product.productId} xs={12} sm={8} md={6} lg={6}>
                                 <ProductMasterCard product={product} />
                             </Col>

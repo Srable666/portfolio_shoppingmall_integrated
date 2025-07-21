@@ -2,14 +2,12 @@ package com.my.gyp_portfolio_shoppingmall.dto;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.util.List;
 
 import org.springframework.format.annotation.DateTimeFormat;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.my.gyp_portfolio_shoppingmall.enums.OrderEnums.PaymentMethod;
 import com.my.gyp_portfolio_shoppingmall.enums.PaymentEnums.PaymentStatus;
-import com.my.gyp_portfolio_shoppingmall.vo.PaymentHistory;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -164,6 +162,7 @@ public class PaymentDto {
         private Integer paymentHistoryId;
         private String impUid;
         private String merchantUid;
+        private String customerEmail;
         private Integer orderId;
         private PaymentStatus status;
         private PaymentMethod paymentMethod;
@@ -174,14 +173,5 @@ public class PaymentDto {
         private LocalDateTime endDate;
         private int offset;
         private int size;
-    }
-
-    // 결제 이력 검색 결과 DTO
-    @Getter @Setter
-    public static class PaymentHistorySearchResultDTO {
-        private List<PaymentHistory> items;
-        private int totalCount;
-        private int currentPage;
-        private int pageSize;
     }
 }

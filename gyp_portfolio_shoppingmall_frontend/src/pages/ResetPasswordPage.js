@@ -136,7 +136,7 @@ const ResetPasswordPage = () => {
     // 비밀번호 확인 검증
     const validateConfirmPassword = ({ getFieldValue }) => ({
         validator(_, value) {
-            if (!value || getFieldValue('password') === value) {
+            if (!value || getFieldValue('newPassword') === value) {
                 return Promise.resolve();
             }
             return Promise.reject(new Error('비밀번호가 일치하지 않습니다.'));

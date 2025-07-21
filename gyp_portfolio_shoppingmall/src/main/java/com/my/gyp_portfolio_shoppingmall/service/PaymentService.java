@@ -27,7 +27,6 @@ import com.my.gyp_portfolio_shoppingmall.dto.PaymentDto.CancelRequestDTO;
 import com.my.gyp_portfolio_shoppingmall.dto.PaymentDto.PaymentDataDTO;
 import com.my.gyp_portfolio_shoppingmall.dto.PaymentDto.PaymentDataDTO.CustomerDTO;
 import com.my.gyp_portfolio_shoppingmall.dto.PaymentDto.PaymentHistorySearchDTO;
-import com.my.gyp_portfolio_shoppingmall.dto.PaymentDto.PaymentHistorySearchResultDTO;
 import com.my.gyp_portfolio_shoppingmall.dto.PaymentDto.PaymentInfoDTO;
 import com.my.gyp_portfolio_shoppingmall.dto.PaymentDto.PaymentPrepareRequestDTO;
 import com.my.gyp_portfolio_shoppingmall.dto.PaymentDto.PortOneResponseDTO;
@@ -473,7 +472,7 @@ public class PaymentService {
      * @return 검색 조건에 맞는 결제 이력 목록
      * @throws IllegalArgumentException 유효하지 않은 검색 조건이 입력된 경우
      */
-    public PaymentHistorySearchResultDTO searchPaymentHistory(PaymentHistorySearchDTO searchDTO) {
+    public List<PaymentHistory> searchPaymentHistory(PaymentHistorySearchDTO searchDTO) {
         // 검색 조건 검증
         validateSearchConditions(searchDTO);
         
@@ -486,21 +485,18 @@ public class PaymentService {
         // 검색 결과가 없는 경우 빈 리스트 반환
         histories = (histories != null) ? histories : Collections.emptyList();
         
-        // 검색 결과 DTO 생성
-        PaymentHistorySearchResultDTO resultDTO = new PaymentHistorySearchResultDTO();
-        resultDTO.setItems(histories);
-        resultDTO.setTotalCount(histories.size());
-        resultDTO.setCurrentPage(calculateCurrentPage(searchDTO.getOffset(), searchDTO.getSize()));
-        resultDTO.setPageSize(searchDTO.getSize());
-        
-        return resultDTO;
+        return histories;
     }
 
     // 총 매출 조회
     public BigDecimal getTotalRevenue() {
         return BigDecimal.valueOf(paymentHistoryDao.getTotalRevenue());
     }
-    
+
+    // 총 결제 수 조회
+    public int getPaymentCount() {
+        return paymentHistoryDao.getPaymentCount();
+    }
 
     // API 요청 및 응답 처리
     private PaymentDataDTO requestPaymentVerification(String paymentId) {
@@ -1258,11 +1254,6 @@ public class PaymentService {
         }
     }
     
-
-    // offset과 size를 기반으로 현재 페이지 번호를 계산
-    private int calculateCurrentPage(int offset, int size) {
-        return (offset / size) + 1;
-    }
 
     // 실패 사유 조회
     private String getFailureReason(PortOneWebhookDTO webhookDTO) {

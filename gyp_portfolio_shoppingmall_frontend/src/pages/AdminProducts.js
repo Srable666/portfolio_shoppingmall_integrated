@@ -17,7 +17,7 @@ import {
 import { 
     App, Button, Cascader, Form, Image, 
     Input, Modal, Popconfirm, Popover, Select, 
-    Space, Spin, Table, Tag, Upload, Tree 
+    Space, Spin, Table, Tag, Tooltip, Upload, Tree 
 } from 'antd';
 
 //#region Styled Components
@@ -550,6 +550,7 @@ const AdminProducts = () => {
     const [searchText, setSearchText] = useState('');
     const [inventories, setInventories] = useState([]);
     const [productItems, setProductItems] = useState([]);
+    const [formFieldValues, setFormFieldValues] = useState({});
     const [categoryOptions, setCategoryOptions] = useState([]);
     const [inventoryHistories, setInventoryHistories] = useState([]);
     const [inventoryFilteredInfo, setInventoryFilteredInfo] = useState({});
@@ -751,6 +752,7 @@ const AdminProducts = () => {
         setProductModalVisible(true);
         productForm.resetFields();
         setFileList([]);
+        setFormFieldValues({});
         
         // 비활성 상태로 초기값 설정
         productForm.setFieldsValue({
@@ -807,7 +809,7 @@ const AdminProducts = () => {
         const categoryPath = findCategoryPathInOptions(filteredOptions, product.categoryId);
 
         // 상품 마스터 수정 모달 세팅
-        productForm.setFieldsValue({
+        const initialValues = {
             name: product.name,
             category: categoryPath || [],
             basePrice: product.basePrice.toString(),
@@ -815,7 +817,10 @@ const AdminProducts = () => {
             finalPrice: product.finalPrice.toString(),
             description: product.description || '',
             isActive: product.isActive,
-        });
+        };
+    
+        productForm.setFieldsValue(initialValues);
+        setFormFieldValues(initialValues);
         setProductModalVisible(true);
     };
 
@@ -1123,10 +1128,14 @@ const AdminProducts = () => {
             ? value[value.length - 1]
             : null;
         setSelectedCategory(selectedCategoryId);
+        setSearchText('');
     };
 
     // 상위 카테고리 변경 시 코드 업데이트
     const handleParentCategoryChange = (value) => {
+        // Form에 값 설정
+        categoryForm.setFieldsValue({ parentCategoryId: value });
+
         // 최상위 카테고리가 선택되면 코드 초기화
         if (!value || value.length === 0) {
             categoryForm.setFieldsValue({ code: '' });
@@ -1151,6 +1160,38 @@ const AdminProducts = () => {
             categoryForm.setFieldsValue({ code: parentCategory.code + '-' });
         }
     };
+    
+    // 폼 필드 변경 추적
+    const handleFormFieldsChange = useCallback((changedFields, allFields) => {
+        const values = {};
+        allFields.forEach(field => {
+            values[field.name[0]] = field.value;
+        });
+        setFormFieldValues(values);
+    }, []);
+
+    // 폼 필드 검증 메시지 반환
+    const getFormValidationMessage = useCallback(() => {
+        const values = formFieldValues;
+        const emptyFields = [];
+        
+        if (!values.name?.trim()) emptyFields.push('상품명');
+        if (!values.category || values.category.length === 0) emptyFields.push('카테고리');
+        if (!values.basePrice || values.basePrice <= 0) emptyFields.push('기본 가격');
+        if (!values.discountRate || values.discountRate < 0) emptyFields.push('할인율');
+        
+        if (emptyFields.length > 0) {
+            return (
+                <div>
+                    다음 항목을 입력해주세요:
+                    <br />
+                    <b>{emptyFields.join(', ')}</b>
+                </div>
+            );
+        }
+        
+        return null;
+    }, [formFieldValues]);
      //#endregion Event Handlers
 
 
@@ -1346,6 +1387,7 @@ const AdminProducts = () => {
     // 카테고리 추가/수정
     const handleCategorySubmit = async (values) => {
         try {
+            console.log('Form values:', values);
             const parentCategoryId = Array.isArray(values.parentCategoryId) && values.parentCategoryId.length > 0 
                 ? values.parentCategoryId[values.parentCategoryId.length - 1]
                 : null;
@@ -1356,6 +1398,7 @@ const AdminProducts = () => {
                 parentCategoryId: parentCategoryId,
             };
 
+            console.log('Request data:', requestData);
             if (selectedCategoryForEdit) {
                 requestData.categoryId = selectedCategoryForEdit.categoryId;
             }
@@ -1392,19 +1435,19 @@ const AdminProducts = () => {
     // 상품 목록 테이블 컬럼 설정
     const columns = [
         {
-            title: 'ID',
-            dataIndex: 'productId',
-            key: 'productId',
+            title: '상품코드',
+            dataIndex: 'code',
+            key: 'code',
             align: 'center',
             ellipsis: true,
             fixed: 'left',
             onHeaderCell: () => ({
-                style: { minWidth: 50 },
+                style: { minWidth: 90 },
             }),
             onCell: () => ({
-                style: { minWidth: 50 },
+                style: { minWidth: 90 },
             }),
-            sorter: (a, b) => a.productId - b.productId,
+            sorter: (a, b) => a.code - b.code,
         },
         {
             title: '상품명',
@@ -2030,6 +2073,7 @@ const AdminProducts = () => {
                         form={productForm}
                         layout="vertical"
                         onFinish={handleProductSubmit}
+                        onFieldsChange={handleFormFieldsChange}
                         initialValues={{
                             discountRate: 0,
                             isActive: 1,
@@ -2068,6 +2112,7 @@ const AdminProducts = () => {
                                 min={0} 
                                 addonAfter="원"
                                 onChange={calculateFinalPrice}
+                                onWheel={(e) => e.target.blur()}
                                 style={{ width: '100%', textAlign: 'right' }}
                             />
                         </Form.Item>
@@ -2083,6 +2128,7 @@ const AdminProducts = () => {
                                 max={100} 
                                 addonAfter="%"
                                 onChange={calculateFinalPrice}
+                                onWheel={(e) => e.target.blur()}
                                 style={{ width: '100%', textAlign: 'right' }}
                             />
                         </Form.Item>
@@ -2165,19 +2211,27 @@ const AdminProducts = () => {
                             style={{ textAlign: 'center', marginTop: 20 }}
                         >
                             <Space>
-                                <Button 
-                                    type="primary" 
-                                    htmlType="submit"
-                                    loading={uploading}
-                                    disabled={uploading}
+                                <Tooltip 
+                                    title={getFormValidationMessage()}
+                                    trigger="click"
+                                    open={getFormValidationMessage() ? undefined : false}
+                                    color="#ff4d4f"
                                 >
-                                    {selectedProduct ? '수정' : '추가'}
-                                </Button>
+                                    <Button 
+                                        type="primary" 
+                                        htmlType="submit"
+                                        loading={uploading}
+                                        disabled={uploading}
+                                    >
+                                        {selectedProduct ? '수정' : '추가'}
+                                    </Button>
+                                </Tooltip>
                                 <Button 
                                     onClick={() => {
-                                    setProductModalVisible(false);
-                                    productForm.resetFields();
-                                    setFileList([]);
+                                        setProductModalVisible(false);
+                                        productForm.resetFields();
+                                        setFileList([]);
+                                        setFormFieldValues({});
                                     }}
                                     disabled={uploading}
                                 >

@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { Layout, Menu, Button, theme, App, Drawer } from 'antd';
 import { useResponsive } from '../contexts/ResponsiveContext';
-import { Link, useLocation, Outlet } from 'react-router-dom';
+import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
 import styled from 'styled-components';
 import {
@@ -207,6 +207,7 @@ const AdminLayout = () => {
 
     //#region Hooks & States
     const location = useLocation();
+    const navigate = useNavigate();
 
     const { message } = App.useApp();
     const { isMobile } = useResponsive();
@@ -228,12 +229,14 @@ const AdminLayout = () => {
     //#region API Functions
     // 로그아웃 처리
     const handleLogout = async () => {
+        navigate('/admin/login', { replace: true });
+
         const response = await logout();
     
         if (response?.data) {
             message.success(response.data);
         } else {
-            message.success('로그아웃되었습니다.');
+            message.success('로그아웃 되었습니다.');
         }
     };
     //#endregion API Functions

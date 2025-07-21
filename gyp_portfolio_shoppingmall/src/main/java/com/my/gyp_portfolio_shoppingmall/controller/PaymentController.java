@@ -1,6 +1,7 @@
 package com.my.gyp_portfolio_shoppingmall.controller;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
@@ -16,7 +17,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.my.gyp_portfolio_shoppingmall.dto.PaymentDto.CancelRequestDTO;
 import com.my.gyp_portfolio_shoppingmall.dto.PaymentDto.PaymentDataDTO;
 import com.my.gyp_portfolio_shoppingmall.dto.PaymentDto.PaymentHistorySearchDTO;
-import com.my.gyp_portfolio_shoppingmall.dto.PaymentDto.PaymentHistorySearchResultDTO;
 import com.my.gyp_portfolio_shoppingmall.dto.PaymentDto.PaymentInfoDTO;
 import com.my.gyp_portfolio_shoppingmall.dto.PaymentDto.PaymentPrepareRequestDTO;
 import com.my.gyp_portfolio_shoppingmall.dto.PaymentDto.PortOneWebhookDTO;
@@ -261,7 +261,7 @@ public class PaymentController {
         String maskedSearchDTO = PaymentLogSupport.maskSearchDTO(searchDTO);
 
         try {
-            PaymentHistorySearchResultDTO result = paymentService.searchPaymentHistory(searchDTO);
+            List<PaymentHistory> result = paymentService.searchPaymentHistory(searchDTO);
             log.info("결제 이력 검색 성공 - {}", maskedSearchDTO);
             return ResponseEntity.ok(result);
         } catch (IllegalArgumentException e) {
@@ -286,6 +286,13 @@ public class PaymentController {
             saveUnexpectedErrorHistory(null, null, "총 매출 조회", e);
             return ResponseEntity.internalServerError().body("알 수 없는 오류로 총 매출 조회에 실패했습니다.");
         }
+    }
+
+    // 총 결제 수 조회
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @GetMapping("/count")
+    public ResponseEntity<?> getPaymentCount() {
+        return ResponseEntity.ok(paymentService.getPaymentCount());
     }
 
     // 알 수 없는 오류의 결제 이력 저장

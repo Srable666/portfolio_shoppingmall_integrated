@@ -533,9 +533,10 @@ const AppLayout = () => {
     //#region Event Handlers
     // 홈 이동
     const goToHome = useCallback(() => {
-        setCurrentCategory(null);
-        setSubCategories([]);
+        setSearchValue('');
         setCategoryPath([]);
+        setSubCategories([]);
+        setCurrentCategory(null);
         navigate('/', { 
             state: { 
                 categoryInfo: null 
@@ -547,6 +548,7 @@ const AppLayout = () => {
     const handleCategoryClick = useCallback(async (category, level) => {
         try {
             setLoading(true);
+            setSearchValue('');
             
             // 하위 카테고리 데이터 가져오기
             const response = await authRequest(
@@ -621,8 +623,6 @@ const AppLayout = () => {
             setSubCategories([]);
 
             navigate(`/products?q=${encodeURIComponent(value)}`);
-            setSearchVisible(false);
-            setSearchValue('');
         }
     };
 
@@ -877,10 +877,17 @@ const AppLayout = () => {
                                     size="small"
                                     aria-label="상품 검색"
                                     suffix={
-                                        <SearchOutlined 
-                                            onClick={() => handleSearch(searchValue)}
-                                            style={{ cursor: 'pointer', color: 'rgba(0,0,0,0.45)' }}
-                                        />
+                                        <Tooltip 
+                                            title={!searchValue.trim() ? "⚠️검색어를 입력 후 검색해주세요." : ""}
+                                            trigger="click"
+                                            open={!searchValue.trim() ? undefined : false}
+                                            color="#ff4d4f"
+                                        >
+                                            <SearchOutlined 
+                                                onClick={() => handleSearch(searchValue)}
+                                                style={{ cursor: 'pointer', color: 'rgba(0,0,0,0.45)' }}
+                                            />
+                                        </Tooltip>
                                     }
                                 />
                             </SearchInputContainer>
@@ -977,17 +984,19 @@ const AppLayout = () => {
                         value={searchValue}
                         onChange={(e) => setSearchValue(e.target.value)}
                         onSearch={handleSearch}
-                        enterButton
                         size="middle"
                         style={{ width: '100%' }}
                         aria-label="상품 검색"
-                    />
-                    <Button
-                        type="text"
-                        icon={<CloseOutlined />}
-                        onClick={() => setSearchVisible(false)}
-                        style={{ color: 'white', marginLeft: '10px' }}
-                        aria-label="검색 닫기"
+                        enterButton={
+                            <Tooltip 
+                                title={!searchValue.trim() ? "⚠️검색어를 입력 후 검색해주세요." : ""}
+                                trigger="click"
+                                open={!searchValue.trim() ? undefined : false}
+                                color="#ff4d4f"
+                            >
+                                <Button type="primary">검색</Button>
+                            </Tooltip>
+                        }
                     />
                 </MobileSearchContainer>
 

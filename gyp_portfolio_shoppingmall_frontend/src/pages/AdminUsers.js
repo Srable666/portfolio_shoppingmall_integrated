@@ -171,6 +171,7 @@ const AdminUsers = () => {
     const [users, setUsers] = useState([]);
     const [pageSize, setPageSize] = useState(10);
     const [loading, setLoading] = useState(false);
+    const [totalCount, setTotalCount] = useState(0);
     const [inputEmail, setInputEmail] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [searchEmail, setSearchEmail] = useState('');
@@ -183,20 +184,51 @@ const AdminUsers = () => {
 
 
     //#region API Functions
-    // 초기 회원 목록 로딩
+    // 전체 회원 수 조회
+    const fetchUserCount = useCallback(async () => {
+        if (!user) return;
+        
+        try {
+            const response = await authRequest('get', '/user/count');
+            setTotalCount(response.data);
+        } catch (error) {
+            console.error('회원 수 조회 에러:', error);
+            if (!error.response) {
+                message.warning('네트워크 연결을 확인해주세요.');
+            } else {
+                message.error(error.response.data || '예기치 못한 오류로 회원 수 조회에 실패했습니다.');
+            }
+        }
+    }, [authRequest, message, user]);
+
+    // 회원 목록 로딩
     const fetchUsers = useCallback(async () => {
         if (!user) return;
         
         try {
             setLoading(true);
 
-            const response = await authRequest('get', '/user/list', {
-                offset: (currentPage - 1) * pageSize,
-                size: pageSize,
+            // 검색어가 있으면 검색어를 설정
+            const params = {
                 email: searchEmail || ''
-            });
+            };
 
-            setUsers(Array.isArray(response.data) ? response.data : []);
+            // 검색어가 없으면 페이지 번호와 페이지 크기를 설정
+            if (!searchEmail) {
+                params.offset = (currentPage - 1) * pageSize;
+                params.size = pageSize;
+            }
+
+            const response = await authRequest('get', '/user/list', params);
+            const userData = Array.isArray(response.data) ? response.data : [];
+            setUsers(userData);
+            
+            if (searchEmail) {
+                setTotalCount(userData.length);
+            } else {
+                setUsers(userData);
+                await fetchUserCount();
+            }
         } catch (error) {
             console.error('회원 목록 조회 에러:', error);            
             if (!error.response) {
@@ -207,7 +239,14 @@ const AdminUsers = () => {
         } finally {
             setLoading(false);
         }
-    }, [authRequest, currentPage, pageSize, searchEmail, message, user]);
+    }, [
+        authRequest, 
+        currentPage, 
+        pageSize, 
+        searchEmail, 
+        message, 
+        user, 
+        fetchUserCount]);
 
     // 로그인 기록 조회
     const fetchLoginHistory = useCallback(async (userId) => {
@@ -300,7 +339,7 @@ const AdminUsers = () => {
 
     //#region Event Handlers
     // 검색 처리
-    const handleSearch = () => {
+    const handleSearch = async () => {
         setSearchEmail(inputEmail);
         setCurrentPage(1);
     };
@@ -398,8 +437,9 @@ const AdminUsers = () => {
 
     // 초기 데이터 로딩
     useEffect(() => {
+        fetchUserCount();
         fetchUsers();
-    }, [fetchUsers]);
+    }, [fetchUserCount, fetchUsers]);
     //#endregion Effect Hooks
 
 
@@ -568,14 +608,14 @@ const AdminUsers = () => {
                     pagination={{
                         current: currentPage,
                         pageSize: pageSize,
+                        total: totalCount,
                         onChange: (page, size) => {
                             setCurrentPage(page);
                             setPageSize(size);
                             fetchUsers();
                         },
                         position: ['bottomCenter'],
-                        showSizeChanger: true, 
-                        pageSizeOptions: ['10', '20', '50', '100'],
+                        showTotal: (total, range) => `${range[0]}-${range[1]} / 총 ${total}명`,
                     }}
                 />
             </TableContainer>

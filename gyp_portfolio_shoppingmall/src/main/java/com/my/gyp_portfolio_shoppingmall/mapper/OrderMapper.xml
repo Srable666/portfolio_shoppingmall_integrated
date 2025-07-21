@@ -219,7 +219,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             LEFT JOIN users u ON o.user_id = u.user_id
             <where>
                 <if test="merchantUid != null and merchantUid != ''">
-                    o.merchant_uid = #{merchantUid}
+                    o.merchant_uid LIKE CONCAT('%', #{merchantUid}, '%')
                 </if>
                 <if test="userEmail != null and userEmail != ''">
                     AND u.email LIKE CONCAT('%', #{userEmail}, '%')
@@ -245,7 +245,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                         o.created_at DESC
                     </otherwise>
                 </choose>
-            <if test="size != null and size > 0">
+            <if test="offset != null and size != null and offset >= 0 and size > 0">
                 LIMIT #{offset}, #{size}
             </if>
         ) AS paginated_orders

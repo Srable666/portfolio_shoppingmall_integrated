@@ -105,6 +105,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="merchantUid != null and merchantUid != ''">
                 AND merchant_uid LIKE CONCAT('%', #{merchantUid}, '%')
             </if>
+            <if test="customerEmail != null and customerEmail != ''">
+                AND customer_email LIKE CONCAT('%', #{customerEmail}, '%')
+            </if>
             <if test="orderId != null">
                 AND order_id = #{orderId}
             </if>
@@ -133,5 +136,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         FROM payment_histories
         WHERE status = 'PAID'
         AND error_code IS NULL
+    </select>
+
+    <!-- 총 결제 수 조회 -->
+    <select id="getPaymentCount" resultType="int">
+        SELECT COUNT(*)
+        FROM payment_histories
     </select>
 </mapper>

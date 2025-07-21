@@ -77,7 +77,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="selectReviewList" parameterType="com.my.gyp_portfolio_shoppingmall.dto.ReviewDto$ReviewSearchDTO" resultType="com.my.gyp_portfolio_shoppingmall.dto.ReviewDto$ReviewSearchDTO">
         <include refid="reviewColumn" />
         <where> 
-            r.is_deleted = 0
             <choose>
                 <when test="reviewId != null">
                     AND r.review_id = #{reviewId}
@@ -86,7 +85,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                     AND r.order_product_id = #{orderProductId}
                 </when>
                 <when test="productCode != null">
-                    AND p.code = #{productCode}
+                    AND p.code LIKE CONCAT('%', #{productCode}, '%')
                 </when>
                 <when test="productItemId != null">
                     AND r.product_item_id = #{productItemId}
@@ -98,12 +97,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                     </foreach>
                 </when>
                 <when test="userEmail != null">
-                    AND u.email = #{userEmail}
+                    AND u.email LIKE CONCAT('%', #{userEmail}, '%')
                 </when>
             </choose>
         </where>
         ORDER BY review_id DESC
-        LIMIT #{offset}, #{size}
+        <if test="offset != null and size != null">
+            LIMIT #{offset}, #{size}
+        </if>
     </select>
 
     <!-- 리뷰 삭제 -->
@@ -117,7 +118,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="getReviewCount" resultType="int">
         SELECT COUNT(*)
         FROM reviews
-        WHERE is_deleted = 0
     </select>
 
     <!-- 이미 작성된 리뷰가 있는지 조회 -->

@@ -129,9 +129,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <!-- 회원 수 조회 -->
     <select id="getUserCount" resultType="int">
         SELECT COUNT(*) 
-        FROM users 
-        WHERE is_deleted = 0
-        AND is_admin = 0
+        FROM users
     </select>
     
     <!-- 회원 목록 조회 -->
@@ -154,7 +152,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             </if>
         </where>
         ORDER BY user_id DESC
-    LIMIT #{offset}, #{size}
+        <if test="offset != null and size != null">
+            LIMIT #{offset}, #{size}
+        </if>
     </select>
 
     <!-- 회원 활성화/비활성화 상태 수정 -->
