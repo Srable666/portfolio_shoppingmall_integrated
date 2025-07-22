@@ -1,17 +1,11 @@
 package com.my.gyp_portfolio_shoppingmall.support;
 
-import com.my.gyp_portfolio_shoppingmall.dto.PaymentDto.PaymentHistorySearchDTO;
-
 public class PaymentLogSupport {
     private static final String MASK_PATTERN = "****";
     
     public static String maskPaymentId(String id) {
         if (id == null || id.length() < 8) return MASK_PATTERN;
         return id.substring(0, 4) + MASK_PATTERN + id.substring(id.length() - 4);
-    }
-    
-    public static String maskSearchDTO(PaymentHistorySearchDTO dto) {
-        return String.format("offset=%d, size=%d", dto.getOffset(), dto.getSize());
     }
     
     public static String maskErrorMessage(String message) {

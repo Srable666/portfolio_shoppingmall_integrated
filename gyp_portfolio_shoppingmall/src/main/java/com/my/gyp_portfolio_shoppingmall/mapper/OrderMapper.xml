@@ -213,63 +213,27 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="getOrderListForAdmin" parameterType="Map" resultMap="OrderHistoryMap">
         SELECT
             <include refid="orderHistoryColumn"/>
-        FROM (
-            SELECT DISTINCT o.order_id
-            FROM orders o
-            LEFT JOIN users u ON o.user_id = u.user_id
-            <where>
-                <if test="merchantUid != null and merchantUid != ''">
-                    o.merchant_uid LIKE CONCAT('%', #{merchantUid}, '%')
-                </if>
-                <if test="userEmail != null and userEmail != ''">
-                    AND u.email LIKE CONCAT('%', #{userEmail}, '%')
-                </if>
-                <if test="startDate != null">
-                    AND o.created_at &gt;= #{startDate}
-                </if>
-                <if test="endDate != null">
-                    AND o.created_at &lt;= #{endDate}
-                </if>
-            </where>
-            ORDER BY 
-                <choose>
-                    <when test="sortField != null">
-                        <choose>
-                            <when test="sortField == 'merchantUid'">o.merchant_uid</when>
-                            <when test="sortField == 'currentTotalPrice'">o.current_total_price</when>
-                            <when test="sortField == 'createdAt'">o.created_at</when>
-                        </choose>
-                        ${sortOrder}
-                    </when>
-                    <otherwise>
-                        o.created_at DESC
-                    </otherwise>
-                </choose>
-            <if test="offset != null and size != null and offset >= 0 and size > 0">
-                LIMIT #{offset}, #{size}
-            </if>
-        ) AS paginated_orders
-        JOIN orders o ON paginated_orders.order_id = o.order_id
+        FROM orders o
         JOIN order_products op ON o.order_id = op.order_id
         LEFT JOIN order_product_histories oph ON op.order_product_id = oph.order_product_id
         LEFT JOIN users u ON o.user_id = u.user_id
         LEFT JOIN product_items pi ON op.product_item_id = pi.product_item_id
         LEFT JOIN products p ON pi.product_id = p.product_id
-        ORDER BY 
-            <choose>
-                <when test="sortField != null">
-                    <choose>
-                        <when test="sortField == 'merchantUid'">o.merchant_uid</when>
-                        <when test="sortField == 'currentTotalPrice'">o.current_total_price</when>
-                        <when test="sortField == 'createdAt'">o.created_at</when>
-                    </choose>
-                    ${sortOrder}
-                </when>
-                <otherwise>
-                    o.created_at DESC
-                </otherwise>
-            </choose>,
-            op.order_product_id
+        <where>
+            <if test="merchantUid != null and merchantUid != ''">
+                o.merchant_uid LIKE CONCAT('%', #{merchantUid}, '%')
+            </if>
+            <if test="userEmail != null and userEmail != ''">
+                AND u.email LIKE CONCAT('%', #{userEmail}, '%')
+            </if>
+            <if test="startDate != null and startDate != ''">
+                AND o.created_at &gt;= #{startDate}
+            </if>
+            <if test="endDate != null and endDate != ''">
+                AND o.created_at &lt;= #{endDate}
+            </if>
+        </where>
+        ORDER BY o.created_at DESC, op.order_product_id
     </select>
 
     <!-- 주문 수 조회 -->

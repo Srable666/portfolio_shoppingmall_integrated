@@ -57,7 +57,5 @@ public class UserDto {
         private String detailAddress;
         private Integer isDeleted;
         private LocalDateTime createdAt;
-        private Integer offset;
-        private Integer size;
     }
 }

@@ -143,6 +143,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="keyword != null">
                 AND p.name LIKE CONCAT('%', #{keyword}, '%')
             </if>
+            <if test="isActive != null">
+                AND p.is_active = #{isActive}
+            </if>
         </where>
         ORDER BY p.product_id DESC
     </select>
@@ -168,7 +171,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             c.name as categoryName
         FROM products p
         LEFT JOIN categories c ON p.category_id = c.category_id
-        WHERE p.is_deleted = 0
+        WHERE 
+            p.is_deleted = 0
+            <if test="isActive != null">
+                AND p.is_active = #{isActive}
+            </if>
         ORDER BY p.product_id DESC
     </select>
 

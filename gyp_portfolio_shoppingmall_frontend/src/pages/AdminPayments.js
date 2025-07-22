@@ -180,89 +180,31 @@ const AdminPayments = () => {
     const { message } = App.useApp();
     const { authRequest, user } = useContext(AuthContext);
 
-    const [pageSize, setPageSize] = useState(10);
     const [loading, setLoading] = useState(false);
+    const [payments, setPayments] = useState([]);
     const [dateRange, setDateRange] = useState(null);
-    const [currentPage, setCurrentPage] = useState(1);
     const [searchKeyword, setSearchKeyword] = useState('');
     const [searchType, setSearchType] = useState('merchantUid');
     const [selectedPayment, setSelectedPayment] = useState(null);
     const [detailModalVisible, setDetailModalVisible] = useState(false);
-    const [payments, setPayments] = useState({
-        items: [],
-        totalCount: 0,
-        currentPage: 1,
-        pageSize: 10
-    });
-    const [searchConditions, setSearchConditions] = useState({
-        impUid: '',
-        merchantUid: '',
-        customerEmail: '',
-        startDate: '',
-        endDate: ''
-    });
     //#endregion Hooks & States
 
     
     //#region API Functions
-    // 총 결제 수 조회
-    const fetchPaymentCount = useCallback(async () => {
-        if (!user) return;
-        
-        try {
-            const response = await authRequest('get', '/payment/count');
-            return response.data;
-        } catch (error) {
-            console.error('결제 수 조회 에러:', error);
-            return 0;
-        }
-    }, [authRequest, user]);
-
     // 결제 목록 조회
-    const fetchPayments = useCallback(async () => {
+    const fetchPayments = useCallback(async (customConditions) => {
         if (!user) return;
         
         try {
             setLoading(true);
 
             const requestParams = { 
-                ...searchConditions
+                ...customConditions
             };
-
-            // 검색 조건이 있는지 확인
-            const hasSearchConditions = searchConditions.impUid || 
-                                        searchConditions.merchantUid || 
-                                        searchConditions.customerEmail ||
-                                        searchConditions.startDate || 
-                                        searchConditions.endDate;
-
-            // 검색 조건이 없을 때만 페이징 파라미터 추가
-            if (!hasSearchConditions) {
-                requestParams.offset = (currentPage - 1) * pageSize;
-                requestParams.size = pageSize;
-            }
 
             const response = await authRequest('get', '/payment/historyListForAdmin', requestParams);
             const paymentData = response.data || [];
-
-            if (hasSearchConditions) {
-                // 검색 시: 전체 결과를 받았으므로 정확한 개수 설정
-                setPayments({
-                    items: paymentData,
-                    totalCount: paymentData.length,
-                    currentPage: 1,
-                    pageSize: pageSize
-                });
-            } else {
-                // 일반 조회 시: 전체 결제 수 조회
-                const totalCount = await fetchPaymentCount();
-                setPayments({
-                    items: paymentData,
-                    totalCount: totalCount,
-                    currentPage: currentPage,
-                    pageSize: pageSize
-                });
-            }
+            setPayments(paymentData);
         } catch (error) {
             console.error('결제 목록 조회 에러:', error);            
             if (!error.response) {
@@ -275,12 +217,8 @@ const AdminPayments = () => {
         }
     }, [
         authRequest, 
-        currentPage, 
-        pageSize, 
-        searchConditions, 
         message, 
         user, 
-        fetchPaymentCount
     ]);
     //#endregion API Functions
 
@@ -288,17 +226,16 @@ const AdminPayments = () => {
     //#region Event Handlers
     // 검색 처리
     const handleSearch = () => {
-        const newSearchConditions = {
+        const searchConditions = {
             startDate: dateRange?.[0] ? dateRange[0].format() : '',
             endDate: dateRange?.[1] ? dateRange[1].format() : '',
         };
 
         if (searchKeyword) {
-            newSearchConditions[searchType] = searchKeyword;
+            searchConditions[searchType] = searchKeyword;
         }
         
-        setSearchConditions(newSearchConditions);
-        setCurrentPage(1);
+        fetchPayments(searchConditions);
     };
 
     // 주문 상세 페이지로 이동
@@ -323,6 +260,19 @@ const AdminPayments = () => {
                 minute: '2-digit'
             })
         });
+    };
+
+    const getPaymentMethodLabel = (paymentMethod) => {
+        const labelMap = {
+            'card': '신용카드',
+            'trans': '계좌이체',
+            'vbank': '가상계좌',
+            'phone': '휴대폰',
+            'kakaopay': '카카오페이',
+            'naverpay': '네이버페이',
+            'tosspay': '토스페이'
+        };
+        return labelMap[paymentMethod] || paymentMethod;
     };
 
     // 결제 상태에 따른 태그 색상
@@ -357,6 +307,7 @@ const AdminPayments = () => {
             dataIndex: 'requestedAt',
             key: 'requestedAt',
             align: 'center',
+            sorter: (a, b) => new Date(a.requestedAt) - new Date(b.requestedAt),
             render: (date) => formatDate(date, false)
         },
         {
@@ -364,6 +315,7 @@ const AdminPayments = () => {
             dataIndex: 'impUid',
             key: 'impUid',
             align: 'center',
+            sorter: (a, b) => a.impUid.localeCompare(b.impUid),
             render: (impUid) => (
                 <ClickableCellButton 
                     type="link" 
@@ -371,14 +323,13 @@ const AdminPayments = () => {
                     onClick={() => {
                         setSearchType('impUid');
                         setSearchKeyword(impUid);
-                        setSearchConditions({
+                        fetchPayments({
                             impUid: impUid,
                             merchantUid: '',
                             customerEmail: '',
                             startDate: '',
                             endDate: ''
                         });
-                        setCurrentPage(1);
                     }}
                 >
                     {impUid}
@@ -390,6 +341,7 @@ const AdminPayments = () => {
             dataIndex: 'merchantUid',
             key: 'merchantUid',
             align: 'center',
+            sorter: (a, b) => a.merchantUid.localeCompare(b.merchantUid),
             render: (merchantUid) => (
                 <ClickableCellButton 
                     type="link" 
@@ -397,7 +349,7 @@ const AdminPayments = () => {
                     onClick={() => {
                         setSearchType('merchantUid');
                         setSearchKeyword(merchantUid);
-                        setSearchConditions({
+                        fetchPayments({
                             impUid: '',
                             merchantUid: merchantUid,
                             customerEmail: '',
@@ -422,7 +374,7 @@ const AdminPayments = () => {
                     onClick={() => {
                         setSearchType('customerEmail');
                         setSearchKeyword(customerEmail);
-                        setSearchConditions({
+                        fetchPayments({
                             impUid: '',
                             merchantUid: '',
                             customerEmail: customerEmail,
@@ -440,13 +392,24 @@ const AdminPayments = () => {
             dataIndex: 'amount',
             key: 'amount',
             align: 'center',
+            sorter: (a, b) => Number(a.amount) - Number(b.amount),
             render: (amount) => `₩${Number(amount).toLocaleString()}`
         },
         {
             title: '결제수단',
             dataIndex: 'paymentMethod',
             key: 'paymentMethod',
-            align: 'center'
+            align: 'center',
+            filters: [
+                { text: '신용카드', value: 'card' },
+                { text: '계좌이체', value: 'trans' },
+                { text: '가상계좌', value: 'vbank' },
+                { text: '휴대폰', value: 'phone' },
+                { text: '카카오페이', value: 'kakaopay' },
+                { text: '네이버페이', value: 'naverpay' },
+                { text: '토스페이', value: 'tosspay' }
+            ],
+            render: (paymentMethod) => getPaymentMethodLabel(paymentMethod)
         },
         {
             title: '결제상태',
@@ -507,7 +470,7 @@ const AdminPayments = () => {
                 </Tag>
             </Descriptions.Item>
             <Descriptions.Item label="결제수단">
-                {selectedPayment.paymentMethod}
+                {getPaymentMethodLabel(selectedPayment.paymentMethod)}
             </Descriptions.Item>
             <Descriptions.Item label="결제금액">
                 ₩{Number(selectedPayment.amount).toLocaleString()}
@@ -542,7 +505,13 @@ const AdminPayments = () => {
     //#region Effect Hooks
     // 초기 데이터 로딩
     useEffect(() => {
-        fetchPayments();
+        fetchPayments({
+            impUid: '',
+            merchantUid: '',
+            customerEmail: '',
+            startDate: '',
+            endDate: ''
+        });
     }, [fetchPayments]);
     //#endregion Effect Hooks
 
@@ -602,19 +571,11 @@ const AdminPayments = () => {
             <TableContainer>
                 <Table
                     columns={columns}
-                    dataSource={payments.items}
+                    dataSource={payments}
                     loading={loading}
                     rowKey="paymentHistoryId"
                     pagination={{
-                        current: currentPage,
-                        pageSize: pageSize,
-                        total: payments.totalCount,
-                        onChange: (page, pageSize) => {
-                            setCurrentPage(page);
-                            setPageSize(pageSize);
-                        },
                         position: ['bottomCenter'],
-                        showTotal: (total, range) => `${range[0]}-${range[1]} / 총 ${total}건`,
                     }}
                     scroll={{ x: 'max-content' }}
                     size="small"

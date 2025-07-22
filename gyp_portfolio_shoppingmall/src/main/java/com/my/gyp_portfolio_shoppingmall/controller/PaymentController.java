@@ -258,14 +258,12 @@ public class PaymentController {
     public ResponseEntity<?> searchPaymentHistory(
         @ModelAttribute PaymentHistorySearchDTO searchDTO
     ) {        
-        String maskedSearchDTO = PaymentLogSupport.maskSearchDTO(searchDTO);
-
         try {
             List<PaymentHistory> result = paymentService.searchPaymentHistory(searchDTO);
-            log.info("결제 이력 검색 성공 - {}", maskedSearchDTO);
+            log.info("결제 이력 검색 성공 - {}", searchDTO);
             return ResponseEntity.ok(result);
         } catch (IllegalArgumentException e) {
-            log.warn("잘못된 검색 조건 - searchDTO: {}", maskedSearchDTO);
+            log.warn("잘못된 검색 조건 - searchDTO: {}", searchDTO);
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
             log.error("결제 이력 검색 중 알 수 없는 오류 발생", e);

@@ -152,9 +152,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             </if>
         </where>
         ORDER BY user_id DESC
-        <if test="offset != null and size != null">
-            LIMIT #{offset}, #{size}
-        </if>
     </select>
 
     <!-- 회원 활성화/비활성화 상태 수정 -->

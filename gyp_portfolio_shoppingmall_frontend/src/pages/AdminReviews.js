@@ -171,64 +171,34 @@ const AdminReviews = () => {
     const { authRequest, user } = useContext(AuthContext);
 
     const [reviews, setReviews] = useState([]);
-    const [pageSize, setPageSize] = useState(10);
     const [loading, setLoading] = useState(false);
-    const [totalCount, setTotalCount] = useState(0);
-    const [currentPage, setCurrentPage] = useState(1);
     const [searchKeyword, setSearchKeyword] = useState('');
     const [searchType, setSearchType] = useState('productCode');
     const [selectedReview, setSelectedReview] = useState(null);
     const [detailModalVisible, setDetailModalVisible] = useState(false);
+    const [searchConditions, setSearchConditions] = useState({
+        productCode: '',
+        userEmail: '',
+    });
     //#endregion Hooks & States
 
 
     //#region API Functions
-    // 전체 리뷰 수 조회
-    const fetchReviewCount = useCallback(async () => {
-        if (!user) return;
-        
-        try {
-            const response = await authRequest('get', '/review/count');
-            setTotalCount(response.data);
-        } catch (error) {
-            console.error('리뷰 수 조회 에러:', error);
-            if (!error.response) {
-                message.warning('네트워크 연결을 확인해주세요.');
-            } else {
-                message.error(error.response.data || '예기치 못한 오류로 리뷰 수 조회에 실패했습니다.');
-            }
-        }
-    }, [authRequest, message, user]);
-
     // 리뷰 목록 가져오기
-    const fetchReviews = useCallback(async (customParams) => {
+    const fetchReviews = useCallback(async (params = {}) => {
         if (!user) return;
         
         try {
             setLoading(true);
 
-            const params = {
-                ...customParams
+            const requestParams = {
+                productCode: params.productCode || '',
+                userEmail: params.userEmail || '',
             };
 
-            // 검색 조건이 있는지 확인
-            const hasSearchConditions = params.productCode || params.userEmail;
-
-            // 검색 조건이 없을 때만 페이징 파라미터 추가
-            if (!hasSearchConditions) {
-                params.offset = (currentPage - 1) * pageSize;
-                params.size = pageSize;
-            }
-
-            const response = await authRequest('get', '/review/list', params);
+            const response = await authRequest('get', '/review/list', requestParams);
             const reviewData = response.data || [];
             setReviews(reviewData);
-
-            if (hasSearchConditions) {
-                setTotalCount(reviewData.length);
-            } else {
-                await fetchReviewCount();
-            }
         } catch (error) {
             console.error('리뷰 목록 조회 에러:', error);
             if (!error.response) {
@@ -239,7 +209,7 @@ const AdminReviews = () => {
         } finally {
             setLoading(false);
         }
-    }, [authRequest, message, currentPage, pageSize, user, fetchReviewCount]);
+    }, [authRequest, message, user]);
 
     // 리뷰 삭제 처리
     const handleDeleteReview = useCallback(async (reviewId) => {
@@ -257,7 +227,7 @@ const AdminReviews = () => {
                 setSelectedReview(null);
             }
 
-            fetchReviews();
+            fetchReviews(searchConditions);
         } catch (error) {
             console.error('리뷰 삭제 에러:', error);            
             if (!error.response) {
@@ -266,7 +236,15 @@ const AdminReviews = () => {
                 message.error(error.response.data || '예기치 못한 오류로 리뷰 삭제에 실패했습니다.');
             }
         }
-    }, [authRequest, message, fetchReviews, detailModalVisible, selectedReview, user]);
+    }, [
+        authRequest, 
+        message, 
+        detailModalVisible, 
+        selectedReview, 
+        user, 
+        searchConditions, 
+        fetchReviews
+    ]);
     //#endregion API Functions
 
     
@@ -284,17 +262,16 @@ const AdminReviews = () => {
 
     // 검색 처리
     const handleSearch = (type, keyword) => {
-        const params = {};
+        const conditions = {
+            productCode: type === 'productCode' ? keyword : '',
+            userEmail: type === 'userEmail' ? keyword : '',
+        };
         
-        const searchValue = String(keyword || '');
-        if (searchValue.trim()) {
-            params[type] = searchValue;
-        }       
-        
+        setSearchConditions(conditions);
         setSearchType(type);
-        setSearchKeyword(searchValue);
-        setCurrentPage(1);
-        fetchReviews(params); 
+        setSearchKeyword(keyword);
+        
+        fetchReviews(conditions);
     };
     //#endregion Event Handlers
 
@@ -302,26 +279,13 @@ const AdminReviews = () => {
     //#region Effect Hooks
     // 초기 데이터 로딩
     useEffect(() => {
-        fetchReviewCount();
         fetchReviews();
-    }, [fetchReviewCount, fetchReviews]);
+    }, [fetchReviews]);
 
     // 검색 초기화
     useEffect(() => {
         setSearchKeyword('');
-        setCurrentPage(1);
     }, []);
-
-    // 페이지 변경시 데이터 로딩
-    useEffect(() => {
-        if (currentPage > 1) {
-            const hasSearchConditions = searchKeyword.trim();
-
-            if (!hasSearchConditions) {
-                fetchReviews();
-            }
-        }
-    }, [currentPage, pageSize, fetchReviews, searchKeyword]);
     //#endregion Effect Hooks
 
 
@@ -537,15 +501,7 @@ const AdminReviews = () => {
                     scroll={{ x: 'max-content' }}
                     size="small"
                     pagination={{
-                        current: currentPage,
-                        pageSize: pageSize,
-                        total: totalCount,
-                        onChange: (page, pageSize) => {
-                            setCurrentPage(page);
-                            setPageSize(pageSize);
-                        },
                         position: ['bottomCenter'],
-                        showTotal: (total, range) => `${range[0]}-${range[1]} / 총 ${total}건`,
                     }}
                 />
             </TableContainer>

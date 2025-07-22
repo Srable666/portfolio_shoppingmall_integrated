@@ -1,7 +1,7 @@
 -- --------------------------------------------------------
--- 호스트:                          127.0.0.1
--- 서버 버전:                        11.5.2-MariaDB - mariadb.org binary distribution
--- 서버 OS:                        Win64
+-- 호스트:                          54.180.232.189
+-- 서버 버전:                        10.11.13-MariaDB-0ubuntu0.24.04.1-log - Ubuntu 24.04
+-- 서버 OS:                        debian-linux-gnu
 -- HeidiSQL 버전:                  12.6.0.6765
 -- --------------------------------------------------------
 
@@ -15,12 +15,11 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 
--- portfolio_shopping_mall_dev 데이터베이스 구조 내보내기
-CREATE DATABASE IF NOT EXISTS `portfolio_shopping_mall_dev` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci */;
-USE `portfolio_shopping_mall_dev`;
+-- portfolio_shopping_mall 데이터베이스 구조 내보내기
+CREATE DATABASE IF NOT EXISTS `portfolio_shopping_mall` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci */;
+USE `portfolio_shopping_mall`;
 
--- 테이블 portfolio_shopping_mall_dev.categories 구조 내보내기
-DROP TABLE IF EXISTS `categories`;
+-- 테이블 portfolio_shopping_mall.categories 구조 내보내기
 CREATE TABLE IF NOT EXISTS `categories` (
   `category_id` int(11) NOT NULL AUTO_INCREMENT,
   `code` varchar(100) NOT NULL,
@@ -32,12 +31,11 @@ CREATE TABLE IF NOT EXISTS `categories` (
   UNIQUE KEY `code` (`code`),
   KEY `FK_CP` (`parent_category_id`),
   CONSTRAINT `FK_CP` FOREIGN KEY (`parent_category_id`) REFERENCES `categories` (`category_id`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- 내보낼 데이터가 선택되어 있지 않습니다.
 
--- 테이블 portfolio_shopping_mall_dev.delivery_histories 구조 내보내기
-DROP TABLE IF EXISTS `delivery_histories`;
+-- 테이블 portfolio_shopping_mall.delivery_histories 구조 내보내기
 CREATE TABLE IF NOT EXISTS `delivery_histories` (
   `delivery_history_id` int(11) NOT NULL AUTO_INCREMENT,
   `order_product_id` int(11) NOT NULL,
@@ -56,8 +54,7 @@ CREATE TABLE IF NOT EXISTS `delivery_histories` (
 
 -- 내보낼 데이터가 선택되어 있지 않습니다.
 
--- 테이블 portfolio_shopping_mall_dev.inventory_histories 구조 내보내기
-DROP TABLE IF EXISTS `inventory_histories`;
+-- 테이블 portfolio_shopping_mall.inventory_histories 구조 내보내기
 CREATE TABLE IF NOT EXISTS `inventory_histories` (
   `inventory_history_id` int(11) NOT NULL AUTO_INCREMENT,
   `product_inventory_id` int(11) DEFAULT NULL,
@@ -71,12 +68,11 @@ CREATE TABLE IF NOT EXISTS `inventory_histories` (
   KEY `product_item_id` (`product_inventory_id`) USING BTREE,
   CONSTRAINT `FK_inventory_histories_order_products` FOREIGN KEY (`order_product_id`) REFERENCES `order_products` (`order_product_id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `FK_inventory_histories_product_inventories` FOREIGN KEY (`product_inventory_id`) REFERENCES `product_inventories` (`product_inventory_id`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=208 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=211 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- 내보낼 데이터가 선택되어 있지 않습니다.
 
--- 테이블 portfolio_shopping_mall_dev.login_histories 구조 내보내기
-DROP TABLE IF EXISTS `login_histories`;
+-- 테이블 portfolio_shopping_mall.login_histories 구조 내보내기
 CREATE TABLE IF NOT EXISTS `login_histories` (
   `login_history_id` bigint(20) NOT NULL AUTO_INCREMENT,
   `user_id` int(11) DEFAULT NULL,
@@ -89,12 +85,11 @@ CREATE TABLE IF NOT EXISTS `login_histories` (
   PRIMARY KEY (`login_history_id`),
   KEY `FK_login_histories_users` (`user_id`),
   CONSTRAINT `FK_login_histories_users` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=600 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=586 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- 내보낼 데이터가 선택되어 있지 않습니다.
 
--- 테이블 portfolio_shopping_mall_dev.orders 구조 내보내기
-DROP TABLE IF EXISTS `orders`;
+-- 테이블 portfolio_shopping_mall.orders 구조 내보내기
 CREATE TABLE IF NOT EXISTS `orders` (
   `order_id` int(11) NOT NULL AUTO_INCREMENT,
   `merchant_uid` varchar(50) DEFAULT NULL,
@@ -107,7 +102,7 @@ CREATE TABLE IF NOT EXISTS `orders` (
   `recipient_postcode` varchar(20) NOT NULL,
   `recipient_address` text NOT NULL,
   `delivery_request` text NOT NULL,
-  `payment_method` enum('CREDIT_CARD','BANK_TRANSFER','VIRTUAL_ACCOUNT','MOBILE_PAYMENT','TOSS_PAY','KAKAO_PAY','NAVER_PAY') NOT NULL,
+  `payment_method` enum('card','trans','vbank','phone','kakaopay','naverpay','tosspay') NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`order_id`),
@@ -118,8 +113,7 @@ CREATE TABLE IF NOT EXISTS `orders` (
 
 -- 내보낼 데이터가 선택되어 있지 않습니다.
 
--- 테이블 portfolio_shopping_mall_dev.order_products 구조 내보내기
-DROP TABLE IF EXISTS `order_products`;
+-- 테이블 portfolio_shopping_mall.order_products 구조 내보내기
 CREATE TABLE IF NOT EXISTS `order_products` (
   `order_product_id` int(11) NOT NULL AUTO_INCREMENT,
   `order_id` int(11) NOT NULL,
@@ -146,8 +140,7 @@ CREATE TABLE IF NOT EXISTS `order_products` (
 
 -- 내보낼 데이터가 선택되어 있지 않습니다.
 
--- 테이블 portfolio_shopping_mall_dev.order_product_histories 구조 내보내기
-DROP TABLE IF EXISTS `order_product_histories`;
+-- 테이블 portfolio_shopping_mall.order_product_histories 구조 내보내기
 CREATE TABLE IF NOT EXISTS `order_product_histories` (
   `order_product_history_id` int(11) NOT NULL AUTO_INCREMENT,
   `order_product_id` int(11) NOT NULL,
@@ -163,15 +156,14 @@ CREATE TABLE IF NOT EXISTS `order_product_histories` (
 
 -- 내보낼 데이터가 선택되어 있지 않습니다.
 
--- 테이블 portfolio_shopping_mall_dev.payment_histories 구조 내보내기
-DROP TABLE IF EXISTS `payment_histories`;
+-- 테이블 portfolio_shopping_mall.payment_histories 구조 내보내기
 CREATE TABLE IF NOT EXISTS `payment_histories` (
   `payment_history_id` int(11) NOT NULL AUTO_INCREMENT,
   `imp_uid` varchar(100) DEFAULT NULL,
   `merchant_uid` varchar(100) DEFAULT NULL,
   `order_id` int(11) DEFAULT NULL,
   `status` enum('READY','PAID','FAILED','CANCELLED','PARTIAL_CANCELLED') DEFAULT NULL,
-  `payment_method` enum('CREDIT_CARD','BANK_TRANSFER','VIRTUAL_ACCOUNT','MOBILE_PAYMENT','KAKAO_PAY','TOSS_PAY','NAVER_PAY') DEFAULT NULL,
+  `payment_method` enum('card','trans','vbank','phone','kakaopay','naverpay','tosspay') DEFAULT NULL,
   `amount` decimal(10,2) DEFAULT NULL,
   `customer_name` varchar(50) DEFAULT NULL,
   `customer_email` varchar(50) DEFAULT NULL,
@@ -192,8 +184,7 @@ CREATE TABLE IF NOT EXISTS `payment_histories` (
 
 -- 내보낼 데이터가 선택되어 있지 않습니다.
 
--- 테이블 portfolio_shopping_mall_dev.products 구조 내보내기
-DROP TABLE IF EXISTS `products`;
+-- 테이블 portfolio_shopping_mall.products 구조 내보내기
 CREATE TABLE IF NOT EXISTS `products` (
   `product_id` int(11) NOT NULL AUTO_INCREMENT,
   `code` varchar(50) NOT NULL,
@@ -217,8 +208,7 @@ CREATE TABLE IF NOT EXISTS `products` (
 
 -- 내보낼 데이터가 선택되어 있지 않습니다.
 
--- 테이블 portfolio_shopping_mall_dev.product_inventories 구조 내보내기
-DROP TABLE IF EXISTS `product_inventories`;
+-- 테이블 portfolio_shopping_mall.product_inventories 구조 내보내기
 CREATE TABLE IF NOT EXISTS `product_inventories` (
   `product_inventory_id` int(11) NOT NULL AUTO_INCREMENT,
   `product_item_id` int(11) NOT NULL,
@@ -233,12 +223,11 @@ CREATE TABLE IF NOT EXISTS `product_inventories` (
   KEY `order_product_id` (`order_product_id`),
   CONSTRAINT `FK_product_inventories_order_products` FOREIGN KEY (`order_product_id`) REFERENCES `order_products` (`order_product_id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `FK_product_inventories_product_items` FOREIGN KEY (`product_item_id`) REFERENCES `product_items` (`product_item_id`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=203 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=206 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- 내보낼 데이터가 선택되어 있지 않습니다.
 
--- 테이블 portfolio_shopping_mall_dev.product_items 구조 내보내기
-DROP TABLE IF EXISTS `product_items`;
+-- 테이블 portfolio_shopping_mall.product_items 구조 내보내기
 CREATE TABLE IF NOT EXISTS `product_items` (
   `product_item_id` int(11) NOT NULL AUTO_INCREMENT,
   `product_id` int(11) NOT NULL,
@@ -255,12 +244,11 @@ CREATE TABLE IF NOT EXISTS `product_items` (
   PRIMARY KEY (`product_item_id`),
   KEY `product_id` (`product_id`),
   CONSTRAINT `FK_product_items_products` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=45 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- 내보낼 데이터가 선택되어 있지 않습니다.
 
--- 테이블 portfolio_shopping_mall_dev.reviews 구조 내보내기
-DROP TABLE IF EXISTS `reviews`;
+-- 테이블 portfolio_shopping_mall.reviews 구조 내보내기
 CREATE TABLE IF NOT EXISTS `reviews` (
   `review_id` int(11) NOT NULL AUTO_INCREMENT,
   `order_product_id` int(11) NOT NULL,
@@ -283,8 +271,7 @@ CREATE TABLE IF NOT EXISTS `reviews` (
 
 -- 내보낼 데이터가 선택되어 있지 않습니다.
 
--- 테이블 portfolio_shopping_mall_dev.users 구조 내보내기
-DROP TABLE IF EXISTS `users`;
+-- 테이블 portfolio_shopping_mall.users 구조 내보내기
 CREATE TABLE IF NOT EXISTS `users` (
   `user_id` int(11) NOT NULL AUTO_INCREMENT,
   `email` varchar(255) NOT NULL,

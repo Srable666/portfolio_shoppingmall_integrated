@@ -752,14 +752,16 @@ const AdminProducts = () => {
         setProductModalVisible(true);
         productForm.resetFields();
         setFileList([]);
-        setFormFieldValues({});
         
-        // 비활성 상태로 초기값 설정
-        productForm.setFieldsValue({
+        // 초기값 설정
+        const initialValues = {
             discountRate: 0,
             isActive: 0,
             finalPrice: 0,
-        });
+        };
+
+        productForm.setFieldsValue(initialValues);
+        setFormFieldValues(initialValues);
     };
 
     // 상품 마스터 수정 모달 열기
@@ -1178,7 +1180,7 @@ const AdminProducts = () => {
         if (!values.name?.trim()) emptyFields.push('상품명');
         if (!values.category || values.category.length === 0) emptyFields.push('카테고리');
         if (!values.basePrice || values.basePrice <= 0) emptyFields.push('기본 가격');
-        if (!values.discountRate || values.discountRate < 0) emptyFields.push('할인율');
+        if (values.discountRate == null || values.discountRate < 0) emptyFields.push('할인율');
         
         if (emptyFields.length > 0) {
             return (
@@ -1927,7 +1929,7 @@ const AdminProducts = () => {
             </HeaderSection>
 
             <ContentContainer>
-                {/* 상품 목록 테이블 */}
+                {/* 주문 목록 테이블 */}
                 <Table
                     columns={columns}
                     dataSource={products}

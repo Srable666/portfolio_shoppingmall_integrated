@@ -169,11 +169,8 @@ const AdminUsers = () => {
     const { authRequest, user } = useContext(AuthContext);
 
     const [users, setUsers] = useState([]);
-    const [pageSize, setPageSize] = useState(10);
     const [loading, setLoading] = useState(false);
-    const [totalCount, setTotalCount] = useState(0);
     const [inputEmail, setInputEmail] = useState('');
-    const [currentPage, setCurrentPage] = useState(1);
     const [searchEmail, setSearchEmail] = useState('');
     const [loginHistory, setLoginHistory] = useState([]);
     const [selectedUser, setSelectedUser] = useState(null);
@@ -184,23 +181,6 @@ const AdminUsers = () => {
 
 
     //#region API Functions
-    // 전체 회원 수 조회
-    const fetchUserCount = useCallback(async () => {
-        if (!user) return;
-        
-        try {
-            const response = await authRequest('get', '/user/count');
-            setTotalCount(response.data);
-        } catch (error) {
-            console.error('회원 수 조회 에러:', error);
-            if (!error.response) {
-                message.warning('네트워크 연결을 확인해주세요.');
-            } else {
-                message.error(error.response.data || '예기치 못한 오류로 회원 수 조회에 실패했습니다.');
-            }
-        }
-    }, [authRequest, message, user]);
-
     // 회원 목록 로딩
     const fetchUsers = useCallback(async () => {
         if (!user) return;
@@ -213,22 +193,9 @@ const AdminUsers = () => {
                 email: searchEmail || ''
             };
 
-            // 검색어가 없으면 페이지 번호와 페이지 크기를 설정
-            if (!searchEmail) {
-                params.offset = (currentPage - 1) * pageSize;
-                params.size = pageSize;
-            }
-
             const response = await authRequest('get', '/user/list', params);
             const userData = Array.isArray(response.data) ? response.data : [];
             setUsers(userData);
-            
-            if (searchEmail) {
-                setTotalCount(userData.length);
-            } else {
-                setUsers(userData);
-                await fetchUserCount();
-            }
         } catch (error) {
             console.error('회원 목록 조회 에러:', error);            
             if (!error.response) {
@@ -241,12 +208,10 @@ const AdminUsers = () => {
         }
     }, [
         authRequest, 
-        currentPage, 
-        pageSize, 
         searchEmail, 
         message, 
         user, 
-        fetchUserCount]);
+    ]);
 
     // 로그인 기록 조회
     const fetchLoginHistory = useCallback(async (userId) => {
@@ -341,7 +306,6 @@ const AdminUsers = () => {
     // 검색 처리
     const handleSearch = async () => {
         setSearchEmail(inputEmail);
-        setCurrentPage(1);
     };
     
     // 주문 내역 보기 버튼 클릭 핸들러
@@ -432,14 +396,12 @@ const AdminUsers = () => {
     useEffect(() => {
         setInputEmail('');
         setSearchEmail('');
-        setCurrentPage(1);
     }, []);
 
     // 초기 데이터 로딩
     useEffect(() => {
-        fetchUserCount();
         fetchUsers();
-    }, [fetchUserCount, fetchUsers]);
+    }, [fetchUsers]);
     //#endregion Effect Hooks
 
 
@@ -606,16 +568,7 @@ const AdminUsers = () => {
                     scroll={{ x: 'max-content' }}
                     size="small"
                     pagination={{
-                        current: currentPage,
-                        pageSize: pageSize,
-                        total: totalCount,
-                        onChange: (page, size) => {
-                            setCurrentPage(page);
-                            setPageSize(size);
-                            fetchUsers();
-                        },
                         position: ['bottomCenter'],
-                        showTotal: (total, range) => `${range[0]}-${range[1]} / 총 ${total}명`,
                     }}
                 />
             </TableContainer>

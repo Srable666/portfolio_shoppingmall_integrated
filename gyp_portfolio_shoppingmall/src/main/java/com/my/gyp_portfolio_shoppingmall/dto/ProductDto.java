@@ -96,6 +96,7 @@ public class ProductDto {
     public static class ProductSearchDTO {
         private String keyword;
         private Integer categoryId;
+        private Integer isActive;
         
     }
 

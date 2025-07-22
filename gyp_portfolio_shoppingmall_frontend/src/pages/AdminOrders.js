@@ -219,14 +219,8 @@ const AdminOrders = () => {
     const [deliveryForm] = Form.useForm();
 
     const [orders, setOrders] = useState([]);
-    const [pageSize, setPageSize] = useState(10);
     const [loading, setLoading] = useState(false);
-    const [totalCount, setTotalCount] = useState(0);
     const [dateRange, setDateRange] = useState(null);
-    const [sortField, setSortField] = useState(null);
-    const [sortOrder, setSortOrder] = useState(null);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [filteredData, setFilteredData] = useState([]);
     const [searchKeyword, setSearchKeyword] = useState('');
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [searchType, setSearchType] = useState('merchantUid');
@@ -240,7 +234,7 @@ const AdminOrders = () => {
     const [searchConditions, setSearchConditions] = useState({
         merchantUid: '',
         userEmail: '',
-        dateRange: null
+        dateRange: null,
     }); 
     //#endregion Hooks & States
 
@@ -417,19 +411,7 @@ const AdminOrders = () => {
                 product: product
             }));
         });
-    }, []);
-    
-    // 특정 인덱스의 상품 인덱스 찾기
-    const getProductIndex = useCallback((orders, orderId, rowIndex) => {
-        let currentIndex = 0;
-        for (let order of orders) {
-            if (order.orderId === orderId) {
-                return rowIndex - currentIndex;
-            }
-            currentIndex += order.orderProductDTOList.length;
-        }
-        return 0;
-    }, []);    
+    }, []);   
 
     // 전화번호 포맷팅
     const formatPhoneNumber = (phone) => {
@@ -464,23 +446,6 @@ const AdminOrders = () => {
     
 
     //#region API Functions
-    // 전체 주문 수 조회
-    const fetchOrderCount = useCallback(async () => {
-        if (!user) return;
-        
-        try {
-            const response = await authRequest('get', '/order/count');
-            setTotalCount(response.data);
-        } catch (error) {
-            console.error('주문 수 조회 에러:', error);
-            if (!error.response) {
-                message.warning('네트워크 연결을 확인해주세요.');
-            } else {
-                message.error(error.response.data || '예기치 못한 오류로 주문 수 조회에 실패했습니다.');
-            }
-        }
-    }, [authRequest, message, user]);
-
     // 주문 목록 조회
     const fetchOrders = useCallback(async (params) => {
         if (!user) return;
@@ -493,17 +458,7 @@ const AdminOrders = () => {
                 userEmail: params.userEmail || '',
                 startDate: params.startDate || '',
                 endDate: params.endDate || '',
-                sortField: params.sortField || sortField || '',
-                sortOrder: params.sortOrder || sortOrder || ''
             };
-
-            // 검색 조건이 없을 때만 페이징 파라미터 추가
-            const hasSearchConditions = params.merchantUid || params.userEmail || params.startDate || params.endDate;
-            
-            if (!hasSearchConditions) {
-                requestParams.page = params.page || 1;
-                requestParams.size = params.size || pageSize;
-            }
             
             const response = await authRequest(
                 'get', 
@@ -513,12 +468,6 @@ const AdminOrders = () => {
 
             const orderData = response.data || [];
             setOrders(orderData);
-
-            if (hasSearchConditions) {
-                setTotalCount(orderData.length);
-            } else {
-                await fetchOrderCount();
-            }
         } catch (error) {
             console.error('주문 목록 조회 에러:', error);            
             if (!error.response) {
@@ -531,12 +480,8 @@ const AdminOrders = () => {
         }
     }, [
         authRequest, 
-        pageSize, 
-        sortField, 
-        sortOrder, 
         message, 
         user, 
-        fetchOrderCount
     ]);
 
     // 배송 이력 조회
@@ -585,34 +530,17 @@ const AdminOrders = () => {
     //#region Data Management Functions
     // 현재 검색 조건으로 주문 목록 로드
     const loadOrderList = useCallback(async () => {
-        const hasSearchConditions = searchConditions.merchantUid || 
-                                    searchConditions.userEmail || 
-                                    searchConditions.dateRange?.[0] || 
-                                    searchConditions.dateRange?.[1];
-        
         const params = {
             merchantUid: searchConditions.merchantUid,
             userEmail: searchConditions.userEmail,
             startDate: searchConditions.dateRange?.[0] ? searchConditions.dateRange[0].format() : '',
             endDate: searchConditions.dateRange?.[1] ? searchConditions.dateRange[1].format() : '',
-            sortField,
-            sortOrder
         };
-
-        // 검색 조건이 없을 때만 페이징 파라미터 추가
-        if (!hasSearchConditions) {
-            params.page = currentPage;
-            params.size = pageSize;
-        }
 
         return fetchOrders(params);
     }, [
         fetchOrders, 
         searchConditions, 
-        currentPage, 
-        pageSize, 
-        sortField, 
-        sortOrder,
     ]);
     
     // 주문 상태 변경 처리
@@ -677,52 +605,16 @@ const AdminOrders = () => {
         };
         
         setSearchConditions(conditions);
-        setCurrentPage(1);
-        
-        const hasSearchConditions = conditions.merchantUid || 
-                                    conditions.userEmail || 
-                                    conditions.dateRange?.[0] || 
-                                    conditions.dateRange?.[1];
 
         const params = {
             merchantUid: conditions.merchantUid,
             userEmail: conditions.userEmail,
             startDate: conditions.dateRange?.[0] ? conditions.dateRange[0].format() : '',
             endDate: conditions.dateRange?.[1] ? conditions.dateRange[1].format() : '',
-            sortField,
-            sortOrder
         };
-
-        // 검색 조건이 없을 때만 페이징 파라미터 추가
-        if (!hasSearchConditions) {
-            params.page = 1;
-            params.size = pageSize;
-        }
         
         fetchOrders(params);
     }
-
-    // 테이블 변경 핸들러
-    const handleTableChange = useCallback((pagination, filters, sorter) => {
-        // 정렬 조건 업데이트
-        if (sorter.field) {
-            setSortField(sorter.field);
-            setSortOrder(sorter.order === 'ascend' ? 'ASC' : 'DESC');
-        }
-
-        // 필터링 로직 적용
-        const transformedData = transformOrdersData(orders);
-        let filtered = [...transformedData];
-
-        // 상태 필터 적용
-        if (filters.status?.length > 0) {
-            filtered = filtered.filter(item => 
-                filters.status.includes(item.product.status)
-            );
-        }
-
-        setFilteredData(filtered);
-    }, [orders, transformOrdersData]);
 
     // 주문 번호 클릭 핸들러
     const handleOrderNumberClick = useCallback((merchantUid) => {
@@ -734,19 +626,14 @@ const AdminOrders = () => {
             dateRange: null
         });
         setDateRange(null);
-        setCurrentPage(1);
 
         fetchOrders({
             merchantUid,
             userEmail: '',
             startDate: '',
             endDate: '',
-            page: 1,
-            size: pageSize,
-            sortField,
-            sortOrder
         });
-    }, [pageSize, sortField, sortOrder, fetchOrders]);
+    }, [fetchOrders]);
 
     // 주문 이메일 클릭 핸들러
     const handleEmailClick = useCallback((email) => {
@@ -758,19 +645,14 @@ const AdminOrders = () => {
             dateRange: null
         });
         setDateRange(null);
-        setCurrentPage(1);
     
         fetchOrders({
             merchantUid: '',
             userEmail: email,
             startDate: '',
             endDate: '',
-            page: 1,
-            size: pageSize,
-            sortField,
-            sortOrder
         });
-    }, [pageSize, sortField, sortOrder, fetchOrders]);
+    }, [fetchOrders]);
 
     // 배송 정보 제출 핸들러
     const handleDeliveryFormSubmit = useCallback((values) => {
@@ -806,72 +688,58 @@ const AdminOrders = () => {
 
 
     //#region Table Cell Handlers & Renderers
-    // 주문 그룹 셀 핸들러
-    const handleOrderGroupCell = useCallback((record) => {
-                const sameOrderRecords = filteredData.length > 0 
-                    ? filteredData.filter(r => r.orderId === record.orderId)
-                    : transformOrdersData(orders).filter(r => r.orderId === record.orderId);
-                
-        const isFirstInFilteredGroup = sameOrderRecords.length > 0 && 
-            sameOrderRecords[0].uniqueKey === record.uniqueKey;
-                
-                return {
-                    rowSpan: isFirstInFilteredGroup ? sameOrderRecords.length : 0
-                };
-    }, [filteredData, orders, transformOrdersData]);
-
     // 주문 상품 렌더링 핸들러
     const handleOrderProductRender = useCallback((_, record, index) => {
-                const product = record.orderProductDTOList[getProductIndex(orders, record.orderId, index)];
-                return (
-                    <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {`${product.productName} (${product.size}/${product.color}, ${product.changedQuantity}개)`}
-                    </div>
-                );
-    }, [orders, getProductIndex]);
+        const product = record.product;
+        return (
+            <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {`${product.productName} (${product.size}/${product.color}, ${product.changedQuantity}개)`}
+            </div>
+        );
+    }, []);
 
     // 주문 상태 렌더링 핸들러
     const handleOrderStatusRender = useCallback((_, record) => {
-                const product = record.product;
-                const nextAction = getNextAction(product.status);
-                const currentStatus = orderStatusOptions.find(opt => opt.value === product.status)?.label;
-                
-                return (
-                    <div style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '4px',
-                        justifyContent: 'center'
-                    }}>
-                        <Tag 
-                            color={getStatusTagColor(product.status)}
-                            style={{
-                                margin: 0,
+        const product = record.product;
+        const nextAction = getNextAction(product.status);
+        const currentStatus = orderStatusOptions.find(opt => opt.value === product.status)?.label;
+        
+        return (
+            <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '4px',
+                justifyContent: 'center'
+            }}>
+                <Tag 
+                    color={getStatusTagColor(product.status)}
+                    style={{
+                        margin: 0,
+                    }}
+                >
+                    {currentStatus}
+                </Tag>
+                {nextAction && (
+                    <>
+                        <SwapRightOutlined style={{ color: '#999999' }} />
+                        <span 
+                            className="action-button"
+                            style={{ cursor: 'pointer' }}
+                            onClick={() => {
+                                if (nextAction.needsDeliveryInfo) {
+                                    setSelectedOrderProduct(product);
+                                    setDeliveryModalVisible(true);
+                                } else {
+                                    handleStatusChange(product, nextAction.endpoint);
+                                }
                             }}
                         >
-                            {currentStatus}
-                        </Tag>
-                        {nextAction && (
-                            <>
-                                <SwapRightOutlined style={{ color: '#999999' }} />
-                                <span 
-                                    className="action-button"
-                                    style={{ cursor: 'pointer' }}
-                                    onClick={() => {
-                                        if (nextAction.needsDeliveryInfo) {
-                                            setSelectedOrderProduct(product);
-                                            setDeliveryModalVisible(true);
-                                        } else {
-                                            handleStatusChange(product, nextAction.endpoint);
-                                        }
-                                    }}
-                                >
-                                    {nextAction.label}
-                                </span>
-                            </>
-                        )}
-                    </div>
-                );
+                            {nextAction.label}
+                        </span>
+                    </>
+                )}
+            </div>
+        );
     }, [getStatusTagColor, getNextAction, handleStatusChange, orderStatusOptions]);
 
     // 작업 렌더링 핸들러
@@ -940,7 +808,7 @@ const AdminOrders = () => {
 
     // 주문 상태 필터 핸들러
     const handleOrderStatusFilter = useCallback((value, record) => {
-                return record.product.status === value;
+        return record.product.status === value;
     }, []);
     //#endregion Filter Functions
 
@@ -953,16 +821,15 @@ const AdminOrders = () => {
             dataIndex: 'createdAt',
             key: 'createdAt',
             align: 'center',
-            sorter: true,
+            sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
             render: (date) => formatDate(date).split('오전').shift().split('오후').shift().trim(),
-            onCell: handleOrderGroupCell
         },
         {
             title: '주문 번호',
             dataIndex: 'merchantUid',
             key: 'merchantUid',
             align: 'center',
-            sorter: true,
+            sorter: (a, b) => a.merchantUid.localeCompare(b.merchantUid),
             render: (merchantUid) => (
                 <ClickableCellButton 
                     type="link" 
@@ -972,7 +839,6 @@ const AdminOrders = () => {
                     {merchantUid}
                 </ClickableCellButton>
             ),
-            onCell: handleOrderGroupCell
         },
         {
             title: '주문 이메일',
@@ -988,16 +854,6 @@ const AdminOrders = () => {
                     {email}
                 </ClickableCellButton>
             ),
-            onCell: handleOrderGroupCell
-        },
-        {
-            title: '주문 금액',
-            dataIndex: 'currentTotalPrice',
-            key: 'currentTotalPrice',
-            align: 'center',
-            render: (price) => `₩${Number(price).toLocaleString()}`,
-            sorter: true,
-            onCell: handleOrderGroupCell
         },
         {
             title: '주문 상품',
@@ -1018,12 +874,10 @@ const AdminOrders = () => {
             key: 'action',
             align: 'center',
             render: handleActionRender,
-            onCell: handleOrderGroupCell
         }
     ], [
         handleOrderNumberClick,
         handleEmailClick,
-        handleOrderGroupCell,
         formatDate,
         handleOrderProductRender,
         handleOrderStatusRender,
@@ -1119,9 +973,8 @@ const AdminOrders = () => {
     //#region Effect Hooks
     // 초기 데이터 로딩
     useEffect(() => {
-        fetchOrderCount();
         loadOrderList();
-    }, [fetchOrderCount, loadOrderList]);
+    }, [loadOrderList]);
 
     // 배송 모달 폼 초기화
     useEffect(() => {
@@ -1155,11 +1008,9 @@ const AdminOrders = () => {
 
             fetchOrders({
                 userEmail: location.state.searchEmail,
-                page: 1,
-                size: pageSize
             });
         }
-    }, [location, navigate, fetchOrders, pageSize]);
+    }, [location, navigate, fetchOrders]);
 
     // 주문 번호 검색 조건 처리
     useEffect(() => {
@@ -1174,11 +1025,9 @@ const AdminOrders = () => {
     
             fetchOrders({
                 merchantUid: location.state.searchMerchantUid,
-                page: 1,
-                size: pageSize
             });
         }
-    }, [location, navigate, fetchOrders, pageSize]);
+    }, [location, navigate, fetchOrders]);
     //#endregion Effect Hooks
 
 
@@ -1221,7 +1070,7 @@ const AdminOrders = () => {
                             onPressEnter={handleSearch}
                             allowClear
                         />
-                        <SearchButton
+                    <SearchButton
                         type="primary"
                         icon={<SearchOutlined />}
                         onClick={handleSearch}
@@ -1235,25 +1084,14 @@ const AdminOrders = () => {
             <TableContainer>
                 <Table
                     columns={columns}
-                    dataSource={filteredData.length > 0 ? filteredData : transformOrdersData(orders)}
+                    dataSource={transformOrdersData(orders)}
                     loading={loading}
                     rowKey="uniqueKey"
                     scroll={{ x: 'max-content' }}
                     size="small"
                     pagination={{
-                        current: currentPage,
-                        pageSize: pageSize,
-                        total: totalCount,
-                        onChange: (page, pageSize) => {
-                            setCurrentPage(page);
-                            setPageSize(pageSize);
-                            loadOrderList();
-                        },
                         position: ['bottomCenter'],
-
-                        showTotal: (total, range) => `${range[0]}-${range[1]} / 총 ${total}건`,
                     }}
-                    onChange={handleTableChange}
                 />
             </TableContainer>
 
@@ -1275,62 +1113,62 @@ const AdminOrders = () => {
                         <LoadingSpinner size="large" tip="데이터를 불러오는 중..." />
                     ) : (
                         selectedOrder && (
-                    <div>
-                        <Descriptions
-                            bordered
-                            column={{ xxl: 2, xl: 2, lg: 2, md: 2, sm: 1, xs: 1 }}
-                            size="small"
-                            style={{
-                                whiteSpace: 'pre-wrap',
-                                wordBreak: 'break-all'
-                            }}
-                        >
-                            <Descriptions.Item label="주문 번호">{selectedOrder.merchantUid}</Descriptions.Item>
-                            <Descriptions.Item label="주문 일시">{formatDate(selectedOrder.createdAt)}</Descriptions.Item>
-                            <Descriptions.Item label="주문 이메일">{selectedOrder.email}</Descriptions.Item>
-                            <Descriptions.Item label="결제 방법">{selectedOrder.paymentMethod}</Descriptions.Item>
-                            <Descriptions.Item label="총 금액">
-                                {`₩${Number(selectedOrder.currentTotalPrice + selectedOrder.deliveryFee).toLocaleString()}`}
-                                {` (${selectedOrder.deliveryFee > 0 
-                                    ? `배송비 ₩${Number(selectedOrder.deliveryFee).toLocaleString()}` 
-                                    : '무료배송'
-                                })`}
-                            </Descriptions.Item>
-                            <Descriptions.Item label="수령인">{selectedOrder.recipientName}</Descriptions.Item>
-                                    <Descriptions.Item label="연락처">{formatPhoneNumber(selectedOrder.recipientPhone)}</Descriptions.Item>
-                            <Descriptions.Item 
-                                label="배송지" 
-                                span={2}
-                                style={{
-                                    whiteSpace: 'pre-wrap',
-                                    wordBreak: 'break-all'
-                                }}
-                            >
-                                {selectedOrder.recipientAddress}
-                            </Descriptions.Item>
-                            <Descriptions.Item 
-                                label="배송 요청사항" 
-                                span={2}
-                                style={{
-                                    whiteSpace: 'pre-wrap',
-                                    wordBreak: 'break-all',
-                                    maxWidth: '100%'
-                                }}
-                            >
-                                {selectedOrder.deliveryRequest || '-'}
-                            </Descriptions.Item>
-                        </Descriptions>
+                            <div>
+                                <Descriptions
+                                    bordered
+                                    column={{ xxl: 2, xl: 2, lg: 2, md: 2, sm: 1, xs: 1 }}
+                                    size="small"
+                                    style={{
+                                        whiteSpace: 'pre-wrap',
+                                        wordBreak: 'break-all'
+                                    }}
+                                >
+                                    <Descriptions.Item label="주문 번호">{selectedOrder.merchantUid}</Descriptions.Item>
+                                    <Descriptions.Item label="주문 일시">{formatDate(selectedOrder.createdAt)}</Descriptions.Item>
+                                    <Descriptions.Item label="주문 이메일">{selectedOrder.email}</Descriptions.Item>
+                                    <Descriptions.Item label="결제 방법">{selectedOrder.paymentMethod}</Descriptions.Item>
+                                    <Descriptions.Item label="총 금액">
+                                        {`₩${Number(selectedOrder.currentTotalPrice + selectedOrder.deliveryFee).toLocaleString()}`}
+                                        {` (${selectedOrder.deliveryFee > 0 
+                                            ? `배송비 ₩${Number(selectedOrder.deliveryFee).toLocaleString()}` 
+                                            : '무료배송'
+                                        })`}
+                                    </Descriptions.Item>
+                                    <Descriptions.Item label="수령인">{selectedOrder.recipientName}</Descriptions.Item>
+                                            <Descriptions.Item label="연락처">{formatPhoneNumber(selectedOrder.recipientPhone)}</Descriptions.Item>
+                                    <Descriptions.Item 
+                                        label="배송지" 
+                                        span={2}
+                                        style={{
+                                            whiteSpace: 'pre-wrap',
+                                            wordBreak: 'break-all'
+                                        }}
+                                    >
+                                        {selectedOrder.recipientAddress}
+                                    </Descriptions.Item>
+                                    <Descriptions.Item 
+                                        label="배송 요청사항" 
+                                        span={2}
+                                        style={{
+                                            whiteSpace: 'pre-wrap',
+                                            wordBreak: 'break-all',
+                                            maxWidth: '100%'
+                                        }}
+                                    >
+                                        {selectedOrder.deliveryRequest || '-'}
+                                    </Descriptions.Item>
+                                </Descriptions>
 
-                        <Table
-                            dataSource={selectedOrder.orderProductDTOList}
-                            pagination={false}
-                                    style={{ marginTop: 10 }}
-                            size="small"
-                            scroll={{ x: 'max-content' }}
-                                    columns={getOrderDetailColumns()}
+                                <Table
+                                    dataSource={selectedOrder.orderProductDTOList}
+                                    pagination={false}
+                                            style={{ marginTop: 10 }}
+                                    size="small"
+                                    scroll={{ x: 'max-content' }}
+                                            columns={getOrderDetailColumns()}
                                 />
-                                                            </div>
-                                                        )
+                            </div>
+                        )
                     )}
                 </OrderDetailContent>
             </OrderDetailModal>

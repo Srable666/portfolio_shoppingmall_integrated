@@ -145,16 +145,11 @@ public class OrderDto {
     // 관리자용 전체 주문 목록 조회
     @Getter @Setter
     public static class OrderListForAdminDTO {
-        private Integer orderId;
         private String merchantUid;
         private String userEmail;
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
         private LocalDateTime startDate;
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
         private LocalDateTime endDate;
-        private int page;
-        private int size;
-        private String sortField;
-        private String sortOrder;
     }
 }

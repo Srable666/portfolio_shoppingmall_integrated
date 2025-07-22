@@ -125,9 +125,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             </if>
         </where>
         ORDER BY created_at DESC
-        <if test="offset != null and size != null and size > 0">
-            LIMIT #{offset}, #{size}
-        </if>
     </select>
 
     <!-- 총 매출 조회 -->

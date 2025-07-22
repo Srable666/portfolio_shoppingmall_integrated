@@ -171,7 +171,5 @@ public class PaymentDto {
         private LocalDateTime startDate;
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
         private LocalDateTime endDate;
-        private int offset;
-        private int size;
     }
 }

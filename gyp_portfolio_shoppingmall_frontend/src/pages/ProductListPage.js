@@ -153,6 +153,8 @@ const ProductListPage = () => {
 
         try {
             const params = {};
+            params.isActive = 1;
+
             if (categoryInfo) {
                 params.categoryId = categoryInfo.categoryId;
             }

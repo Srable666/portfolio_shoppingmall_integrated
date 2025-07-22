@@ -537,15 +537,12 @@ public class OrderService {
     // 관리자용 전체 주문 상품 리스트 조회(검색 조건 포함)
     public List<UserOrderHistoryDTO> getOrderListForAdmin(OrderListForAdminDTO orderListForAdminDTO) {
         Map<String, Object> params = new HashMap<>();
-        params.put("orderId", orderListForAdminDTO.getOrderId());
         params.put("merchantUid", orderListForAdminDTO.getMerchantUid());
         params.put("userEmail", orderListForAdminDTO.getUserEmail());
         params.put("startDate", orderListForAdminDTO.getStartDate() != null ? 
             orderListForAdminDTO.getStartDate().toString() : null);
         params.put("endDate", orderListForAdminDTO.getEndDate() != null ? 
             orderListForAdminDTO.getEndDate().toString() : null);
-        params.put("offset", (orderListForAdminDTO.getPage() - 1) * orderListForAdminDTO.getSize());
-        params.put("size", orderListForAdminDTO.getSize());
 
         List<UserOrderHistoryDTO> orderListForAdminDTOList = orderDao.getOrderListForAdmin(params);
         for (UserOrderHistoryDTO userOrderHistoryDTO : orderListForAdminDTOList) {
