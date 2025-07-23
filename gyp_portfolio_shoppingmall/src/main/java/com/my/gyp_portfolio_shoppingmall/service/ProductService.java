@@ -140,6 +140,7 @@ public class ProductService {
         product.setCategoryId(category.getCategoryId());
         product.setImageUrl(productDTO.getImageUrl());        
         product.setDescription(productDTO.getDescription());
+        product.setIsActive(productDTO.getIsActive());
         productDao.insertProduct(product);
     }
 

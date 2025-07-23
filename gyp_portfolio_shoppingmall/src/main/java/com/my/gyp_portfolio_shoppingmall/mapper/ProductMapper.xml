@@ -13,7 +13,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             final_price,
             category_id,
             image_url,
-            description
+            description,
+            is_active
         ) VALUES (
             #{name},
             #{code},
@@ -22,7 +23,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             #{finalPrice},
             #{categoryId},
             #{imageUrl},
-            #{description}
+            #{description},
+            #{isActive}
         )
     </insert>
 

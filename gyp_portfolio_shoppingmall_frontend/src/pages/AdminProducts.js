@@ -1369,7 +1369,11 @@ const AdminProducts = () => {
             message.success(response.data);
             setInventoryAddModalVisible(false);
             inventoryForm.resetFields();
+
+            // 입고 후 상품 품목 재고 목록 조회
             await fetchInventories(selectedInventoryItem.productItemId);
+
+            // 입고 후 상품 목록 조회
             await fetchProductItems(selectedProduct.productId);
         } catch (error) {
             console.error('입고 처리 에러:', error);
