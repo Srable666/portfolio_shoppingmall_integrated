@@ -67,7 +67,9 @@ export const AuthProvider = ({ children }) => {
             return response;
         },
         (error) => {
+            // 401 에러는 리프레시 토큰도 만료된 경우에만 발생
             if (error.response && error.response.status === 401) {
+                console.log('리프레시 토큰 만료로 인한 자동 로그아웃');
                 setIsAuthenticated(false);
                 setAccessToken(null);
                 setUser(null);
@@ -156,43 +158,44 @@ export const AuthProvider = ({ children }) => {
             isWithdraw = false,
             reason = 'manual' // 'manual', 'tokenExpired', 'unauthorized', 'withdraw'
         } = options;
-            // 회원탈퇴 처리 여부 구분
-            if (isWithdraw) {
-                setIsWithdrawing(true);
+
+        // 회원탈퇴 처리 여부 구분
+        if (isWithdraw) {
+            setIsWithdrawing(true);
+        }
+
+        let response = null;
+
+        // 로그아웃 처리
+        if (!skipApiCall) {
+            try {
+                response = await apiClient.post('/user/logout');
+            } catch (error) {
+                console.warn('서버 로그아웃 API 호출 실패:', error);
             }
+        }
 
-            let response = null;
-
-            // 로그아웃 처리
-            if (!skipApiCall) {
-                try {
-                    response = await apiClient.post('/user/logout');
-                } catch (error) {
-                    console.warn('서버 로그아웃 API 호출 실패:', error);
-                }
-            }
-
-            // 상태 초기화
-            setAccessToken(null);
-            setIsAuthenticated(false);
-            setUser(null);
-            sessionStorage.removeItem('accessToken');
-            localStorage.removeItem('isAdmin');
+        // 상태 초기화
+        setAccessToken(null);
+        setIsAuthenticated(false);
+        setUser(null);
+        sessionStorage.removeItem('accessToken');
+        localStorage.removeItem('isAdmin');
         
-            // 회원탈퇴 처리
-            if (isWithdraw) {
-                setTimeout(() => {
-                    setIsWithdrawing(false);
-                }, 500);
-            }
+        // 회원탈퇴 처리
+        if (isWithdraw) {
+            setTimeout(() => {
+                setIsWithdrawing(false);
+            }, 500);
+        }
 
-            // 로그아웃 이유에 따른 추가 처리
-            if (reason === 'tokenExpired') {
-                console.log('토큰 만료로 인한 자동 로그아웃');
-            }
+        // 로그아웃 이유에 따른 추가 처리
+        if (reason === 'tokenExpired') {
+            console.log('토큰 만료로 인한 자동 로그아웃');
+        }
 
-            return response;
-        }, [apiClient]);
+        return response;
+    }, [apiClient]);
 
     // 비밀번호 재설정 이메일 발송
     const sendPasswordResetEmail = async (email) => {
@@ -223,22 +226,10 @@ export const AuthProvider = ({ children }) => {
             try {
                 const savedToken = sessionStorage.getItem('accessToken');
                 
-                if (savedToken) {                    
+                // 엑세스 토큰이 있는 경우
+                if (savedToken) {   
                     const decodedInfo = decodeAccessToken(savedToken);
                     if (decodedInfo) {
-                        // 토큰 만료 확인
-                        const timeUntilExpiry = (decodedInfo.exp * 1000) - Date.now();
-                        if (timeUntilExpiry <= 60000) {
-                            console.log('토큰이 곧 만료됩니다.');
-
-                            setAccessToken(null);
-                            setIsAuthenticated(false);
-                            setUser(null);
-                            sessionStorage.removeItem('accessToken');
-                            localStorage.removeItem('isAdmin');
-                            return;
-                        }
-
                         // 사용자 인증 정보 설정
                         const userAuthInfo = {
                             email: decodedInfo.email,
@@ -255,22 +246,10 @@ export const AuthProvider = ({ children }) => {
                         } else {
                             localStorage.removeItem('isAdmin');
                         }
-
-                        // 토큰 만료로 인한 자동 로그아웃
-                        setTimeout(async () => {
-                            console.log('토큰 만료로 인한 자동 로그아웃');
-
-                            setAccessToken(null);
-                            setIsAuthenticated(false);
-                            setUser(null);
-                            sessionStorage.removeItem('accessToken');
-                            localStorage.removeItem('isAdmin');
-                        }, timeUntilExpiry - 60000);
                     }
                 } else {
-                    // 토큰이 유효하지 않은 경우
-                    console.error('토큰이 유효하지 않습니다.');
-                    sessionStorage.removeItem('accessToken');
+                    // 엑세스 토큰이 없는 경우
+                    console.error('엑세스 토큰이 없습니다.');
                     setAccessToken(null);
                     setIsAuthenticated(false);
                     setUser(null);
@@ -302,24 +281,8 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    // 토큰 만료 여부 확인
-    const isTokenExpired = (decodedToken) => {
-        if (!decodedToken || !decodedToken.exp) return true;
-        const currentTime = Math.floor(Date.now() / 1000);
-        return decodedToken.exp < currentTime;
-    };
-
     // 요청 처리
     const authRequest = useCallback(async (method, url, data, options = {}) => {
-        const token = accessToken || sessionStorage.getItem('accessToken');
-        if (token) {
-            const decodedToken = decodeAccessToken(token);
-            if (isTokenExpired(decodedToken)) {
-                await logout({ skipApiCall: true, reason: 'tokenExpired' });
-                throw new Error('세션이 만료되었습니다. 다시 로그인해주세요.');
-            }
-        }
-
         const methodLower = method.toLowerCase();
         const config = {
             method,
@@ -336,7 +299,7 @@ export const AuthProvider = ({ children }) => {
 
         // 나머지 요청은 데이터 처리
         return apiClient(config);
-    }, [accessToken, logout, apiClient]);
+    }, [apiClient]);
 
     return (
         <AuthContext.Provider value={{

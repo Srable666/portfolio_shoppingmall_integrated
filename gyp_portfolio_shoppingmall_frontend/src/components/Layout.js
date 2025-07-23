@@ -283,6 +283,12 @@ const StyledMenu = styled(Menu)`
             }
         }
     }
+    
+    .ant-menu-overflow-item-rest {
+        .anticon svg {
+            filter: invert(1) brightness(100%);
+        }
+    }
 
     @media (max-width: 768px) {
         overflow-x: auto;
@@ -556,41 +562,45 @@ const AppLayout = () => {
                 `/product/getSubCategories/${category.categoryId}`
             );
 
-            if (response.status === 200) {
-                const newSubCategories = response.data && response.data.length > 0 ? response.data : [];
-                
-                // 경로 계산 로직
-                let newPath = [];
-                if (level === 1) {
-                    newPath = [category];
-                } else if (level === 2) {
-                    const parent = categories.find(c => c.categoryId === category.parentCategoryId);
-                    newPath = parent ? [parent, category] : [category];
-                } else if (level === 3) {
+            const newSubCategories = response.data && response.data.length > 0 ? response.data : [];
+            
+            // 경로 계산 로직
+            let newPath = [];
+            if (level === 1) {
+                newPath = [category];
+            } else if (level === 2) {
+                const parent = categories.find(c => c.categoryId === category.parentCategoryId);
+                newPath = parent ? [parent, category] : [category];
+            } else if (level === 3) {
+                if (categoryPath.length >= 2) {
+                    newPath = [...categoryPath, category];
+                } else {
+                    // fallback: 상위 카테고리들을 찾아서 경로 구성
                     const parent2 = subCategories.find(c => c.categoryId === category.parentCategoryId);
                     if (parent2) {
                         const parent1 = categories.find(c => c.categoryId === parent2.parentCategoryId);
                         newPath = parent1 ? [parent1, parent2, category] : [parent2, category];
                     } else {
-                        newPath = [category];
+                        // 최후의 fallback: 현재 경로 + 새 카테고리
+                        newPath = categoryPath.length > 0 ? [...categoryPath, category] : [category];
                     }
                 }
-            
-                // state 업데이트
-                setCurrentCategory(category);
-                setCategoryPath(newPath);
-                setSubCategories(newSubCategories);
-                
-                // 페이지 이동
-                navigate(`/${category.code}`, {
-                    state: {
-                        categoryInfo: {
-                            ...category,
-                            categoryPath: newPath
-                        }
-                    }
-                });
             }
+        
+            // state 업데이트
+            setCurrentCategory(category);
+            setCategoryPath(newPath);
+            setSubCategories(newSubCategories);
+            
+            // 페이지 이동
+            navigate(`/${category.code}`, {
+                state: {
+                    categoryInfo: {
+                        ...category,
+                        categoryPath: newPath
+                    }
+                }
+            });
         } catch (error) {
             console.error('카테고리 클릭 이벤트 처리 에러:', error);
             
@@ -602,7 +612,7 @@ const AppLayout = () => {
         } finally {
             setLoading(false);
         }
-    }, [categories, subCategories, authRequest, navigate, message]);
+    }, [categories, subCategories, authRequest, navigate, message, categoryPath]);
 
     // 카테고리 경로 클릭 이벤트 처리
     const handlePathClick = useCallback((index) => {
