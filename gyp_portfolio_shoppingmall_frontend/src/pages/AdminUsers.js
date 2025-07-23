@@ -612,27 +612,31 @@ const AdminUsers = () => {
                                     {selectedUser.isDeleted === 0 ? 
                                     <>
                                         <Tag color="success" style={{ marginRight: 0, fontSize: '14px', padding: '2px 10px' }}>활성</Tag>
-                                        <DeactivateButton 
-                                            type="primary"
-                                            icon={<SwapRightOutlined />}
-                                            size="small"
-                                            disabled={userDetailLoading}
-                                            onClick={() => toggleUserDeleted(selectedUser)}
-                                        >
-                                            비활성화 하기
-                                        </DeactivateButton>
+                                        {selectedUser.isAdmin !== 1 && (
+                                            <DeactivateButton 
+                                                type="primary"
+                                                icon={<SwapRightOutlined />}
+                                                size="small"
+                                                disabled={userDetailLoading}
+                                                onClick={() => toggleUserDeleted(selectedUser)}
+                                            >
+                                                비활성화 하기
+                                            </DeactivateButton>
+                                        )}
                                     </> : 
                                     <>
-                                        <Tag color="error" style={{ marginRight: 0, fontSize: '14px', padding: '2px 10px' }}>비활성화</Tag>
-                                        <ActivateButton 
-                                            type="primary"
-                                            icon={<SwapRightOutlined />}
-                                            size="small" 
-                                            disabled={userDetailLoading}
-                                            onClick={() => toggleUserDeleted(selectedUser)}
-                                        >
-                                            활성화 하기
-                                        </ActivateButton>
+                                        <Tag color="error" style={{ marginRight: 0, fontSize: '14px', padding: '2px 10px' }}>비활성</Tag>
+                                        {selectedUser.isAdmin !== 1 && (
+                                            <ActivateButton 
+                                                type="primary"
+                                                icon={<SwapRightOutlined />}
+                                                size="small" 
+                                                disabled={userDetailLoading}
+                                                onClick={() => toggleUserDeleted(selectedUser)}
+                                            >
+                                                활성화 하기
+                                            </ActivateButton>
+                                        )}
                                     </>
                                     }
                                 </div>
