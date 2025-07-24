@@ -23,32 +23,53 @@ const ProductCard = styled(Card)`
     .ant-card-meta-title {
         font-size: 14px;
         margin-bottom: 8px !important;
-        white-space: nowrap;
+        white-space: normal;
         overflow: hidden;
-        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        line-height: 1.3;
     }
 
     .ant-card-meta-description {
         line-height: 1.4;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 4px;
 
         .original-price {
             color: #757575;
             text-decoration: line-through;
             font-size: 14px;
-            margin-right: 6px;
         }
 
         .discount-rate {
             color: #f15746;
             font-weight: 600;
             font-size: 15px;
-            margin-right: 6px;
         }
 
         .final-price {
             color: #000000;
             font-weight: 600;
             font-size: 16px;
+        }
+            
+        @media (max-width: 480px) {
+            gap: 2px;
+
+            .original-price {
+                font-size: 13px;
+            }
+
+            .discount-rate {
+                font-size: 14px;
+            }
+
+            .final-price {
+                font-size: 15px;
+            }
         }
     }
 `;

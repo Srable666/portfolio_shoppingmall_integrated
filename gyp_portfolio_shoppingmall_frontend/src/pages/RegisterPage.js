@@ -140,6 +140,8 @@ const RegisterPage = () => {
         }
 
         setLoading(true);
+        message.loading('회원가입 처리 중...');
+
         try {
             const response = await register({
                 email: values.email,
@@ -163,6 +165,7 @@ const RegisterPage = () => {
             }
         } finally {
             setLoading(false);
+            message.destroy();
         }
     };
 

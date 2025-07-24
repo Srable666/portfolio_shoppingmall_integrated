@@ -1200,7 +1200,7 @@ const AdminProducts = () => {
     //#region Form Submit Handlers
     // 상품 마스터 생성&수정 처리
     const handleProductSubmit = async (values) => {
-        message.info('처리 중...');
+        message.loading('처리 중...');
 
         try {
             setUploading(true);
@@ -1306,7 +1306,7 @@ const AdminProducts = () => {
 
     // 상품 품목 생성&수정 처리
     const handleProductItemSubmit = async (values) => {
-        message.info('처리 중...');
+        message.loading('처리 중...');
 
         try {
             setProductItemLoading(true);
@@ -1350,7 +1350,7 @@ const AdminProducts = () => {
 
     // 입고 처리
     const handleInventorySubmit = async (values) => {
-        message.info('처리 중...');
+        message.loading('처리 중...');
 
         try {
             const barcodes = values.barcodes
@@ -1389,7 +1389,7 @@ const AdminProducts = () => {
 
     // 카테고리 추가/수정
     const handleCategorySubmit = async (values) => {
-        message.info('처리 중...');
+        message.loading('처리 중...');
 
         try {
             console.log('Form values:', values);
@@ -1451,18 +1451,11 @@ const AdminProducts = () => {
             sorter: (a, b) => a.code - b.code,
         },
         {
-            title: '상품명',
-            dataIndex: 'name',
-            key: 'name',
-            align: 'center',
-            fixed: 'left',
-            sorter: (a, b) => a.name.localeCompare(b.name),
-        },
-        {
             title: '이미지',
             dataIndex: 'imageUrl',
             key: 'imageUrl',
             align: 'center',
+            fixed: 'left',
             ellipsis: true,
             onHeaderCell: () => ({
                 style: { minWidth: 60 },
@@ -1488,6 +1481,13 @@ const AdminProducts = () => {
                     />
                 );
             }
+        },
+        {
+            title: '상품명',
+            dataIndex: 'name',
+            key: 'name',
+            align: 'center',
+            sorter: (a, b) => a.name.localeCompare(b.name),
         },
         {
             title: '기본 가격',

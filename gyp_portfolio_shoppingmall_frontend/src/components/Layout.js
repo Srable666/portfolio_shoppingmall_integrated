@@ -566,25 +566,20 @@ const AppLayout = () => {
             
             // 경로 계산 로직
             let newPath = [];
+
+            // 1차 카테고리일 경우
             if (level === 1) {
                 newPath = [category];
+            // 2차 카테고리일 경우
             } else if (level === 2) {
                 const parent = categories.find(c => c.categoryId === category.parentCategoryId);
                 newPath = parent ? [parent, category] : [category];
-            } else if (level === 3) {
-                if (categoryPath.length >= 2) {
-                    newPath = [...categoryPath, category];
-                } else {
-                    // fallback: 상위 카테고리들을 찾아서 경로 구성
-                    const parent2 = subCategories.find(c => c.categoryId === category.parentCategoryId);
-                    if (parent2) {
-                        const parent1 = categories.find(c => c.categoryId === parent2.parentCategoryId);
-                        newPath = parent1 ? [parent1, parent2, category] : [parent2, category];
-                    } else {
-                        // 최후의 fallback: 현재 경로 + 새 카테고리
-                        newPath = categoryPath.length > 0 ? [...categoryPath, category] : [category];
-                    }
-                }
+            // 3차 이상 카테고리일 경우
+            } else {
+                // 현재 경로에서 해당 레벨까지만 유지하고 새 카테고리로 교체
+                const basePathLength = level - 1;
+                const basePath = categoryPath.slice(0, basePathLength);
+                newPath = [...basePath, category];
             }
         
             // state 업데이트
@@ -612,7 +607,7 @@ const AppLayout = () => {
         } finally {
             setLoading(false);
         }
-    }, [categories, subCategories, authRequest, navigate, message, categoryPath]);
+    }, [categories, authRequest, navigate, message, categoryPath]);
 
     // 카테고리 경로 클릭 이벤트 처리
     const handlePathClick = useCallback((index) => {
@@ -802,32 +797,40 @@ const AppLayout = () => {
     }) => {
         // items 배열 생성
         const menuItems = currentCategory === null
+            // 최상위 카테고리일 경우
             ? categories.map(category => ({
                 key: category.categoryId,
-                label: <Link 
-                            to={`/${category.code}`}
-                            state={{ 
-                                categoryInfo: {
-                                    ...category,
-                                    categoryPath: [category]
-                                }
-                            }}
-                            onClick={(e) => {
-                                e.preventDefault(); 
-                                handleCategoryClick(category, 1);
-                            }}
-                        >
-                            {category.name}
-                        </Link>,
+                label: 
+                    <Link 
+                        to={`/${category.code}`}
+                        state={{ 
+                            categoryInfo: {
+                                ...category,
+                                categoryPath: [category]
+                            }
+                        }}
+                        onClick={(e) => {
+                            e.preventDefault(); 
+                            handleCategoryClick(category, 1);
+                        }}
+                    >
+                        {category.name}
+                    </Link>,
             }))
-            : subCategories.map(subCat => ({
-                key: subCat.categoryId,
-                label: <Link 
+            // 하위 카테고리일 경우
+            : subCategories.map(subCat => {
+                // 새로운 경로 계산: 현재 경로 + 새 카테고리
+                const newPath = [...categoryPath, subCat];
+                
+                return {
+                    key: subCat.categoryId,
+                    label: 
+                        <Link 
                             to={`/${subCat.code}`}
                             state={{ 
                                 categoryInfo: {
                                     ...subCat,
-                                    categoryPath: [...categoryPath, subCat]
+                                    categoryPath: newPath
                                 }
                             }}
                             onClick={(e) => {
@@ -837,8 +840,10 @@ const AppLayout = () => {
                         >
                             {subCat.name}
                         </Link>,
-            }));
+                }
+            });
     
+        // 메뉴 아이템 반환
         return (
             <StyledMenu
                 mode="horizontal"
