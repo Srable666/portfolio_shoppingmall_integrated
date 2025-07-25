@@ -971,7 +971,30 @@ const AdminOrders = () => {
 
 
     //#region Effect Hooks
-    // 초기 데이터 로딩
+    // 초기 데이터 로딩 - 컴포넌트 마운트 시마다 최신 데이터 로드
+    useEffect(() => {
+        // 페이지 방문 시마다 기본 검색 조건으로 전체 주문 목록 조회
+        const defaultParams = {
+            merchantUid: '',
+            userEmail: '',
+            startDate: '',
+            endDate: '',
+        };
+        
+        fetchOrders(defaultParams);
+        
+        // searchConditions 초기화
+        setSearchConditions({
+            merchantUid: '',
+            userEmail: '',
+            dateRange: null,
+        });
+        setDateRange(null);
+        setSearchKeyword('');
+        setSearchType('merchantUid');
+    }, []); // 빈 의존성 배열로 마운트 시에만 실행
+
+    // 주문 목록 로딩
     useEffect(() => {
         loadOrderList();
     }, [loadOrderList]);
