@@ -255,16 +255,6 @@ const ProductDetail = () => {
                 categoryPath: response.data
             };
 
-            // 브라우저 히스토리 업데이트
-            window.history.replaceState(
-                {
-                    ...location.state,
-                    categoryInfo
-                },
-                '',
-                location.pathname + location.search
-            );
-
             // 상위 컴포넌트(Layout)에 카테고리 정보 전달을 위한 커스텀 이벤트 발생
             window.dispatchEvent(new CustomEvent('categoryInfoUpdate', {
                 detail: { categoryInfo }
@@ -278,7 +268,7 @@ const ProductDetail = () => {
                 message.error(error.response.data || '예기치 못한 오류로 카테고리 경로 조회에 실패했습니다.');
             }
         }
-    }, [authRequest, location.pathname, location.search, location.state, message]);
+    }, [authRequest, message]);
 
     // 상품 품목 정보 조회
     const fetchProductItems = useCallback(async (productId) => {
@@ -361,7 +351,12 @@ const ProductDetail = () => {
         if (!isAuthenticated) {
             message.warning('로그인이 필요한 서비스입니다.');
             navigate('/login', { 
-                state: { from: location.pathname }
+                state: { 
+                    from: location.pathname + location.search,
+                    categoryInfo: location.state?.categoryInfo,
+                    product: product,
+                    timestamp: Date.now()
+                }
             });
             return;
         }
@@ -397,6 +392,8 @@ const ProductDetail = () => {
         availableStock, 
         navigate, 
         location.pathname, 
+        location.search,
+        location.state?.categoryInfo,
         message,
         addToCart,
         product,

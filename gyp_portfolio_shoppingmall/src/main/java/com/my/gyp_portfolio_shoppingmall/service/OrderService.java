@@ -603,6 +603,15 @@ public class OrderService {
             }
         }
 
+        // 주문한 상품 이력 정보 생성
+        OrderProductHistory orderProductHistory = new OrderProductHistory();
+        orderProductHistory.setOrderProductId(orderProductCheck.getOrderProductId());
+        orderProductHistory.setRequestQuantityRecord(orderProductDTO.getRequestQuantity());
+        orderProductHistory.setStatusFrom(orderProductCheck.getStatus());
+        orderProductHistory.setStatusTo(orderProductDTO.getStatus());
+        orderProductHistory.setReason(orderProductDTO.getRequestReason());
+        orderDao.insertOrderProductHistory(orderProductHistory);
+
         // orderProduct 상태 업데이트(낙관적 잠금)
         if (orderProductDTO.getStatus() == OrderProductStatus.EXCHANGE_REQUESTED) {
             orderProductCheck.setRequestQuantity(orderProductDTO.getRequestQuantity());
@@ -614,15 +623,6 @@ public class OrderService {
         orderProductCheck.setRequestReason(orderProductDTO.getRequestReason());
         orderProductCheck.setVersion(orderProductDTO.getVersion());
         updateOrderProductStatusWithOptimisticLock(orderProductCheck);
-
-        // 주문한 상품 이력 정보 생성
-        OrderProductHistory orderProductHistory = new OrderProductHistory();
-        orderProductHistory.setOrderProductId(orderProductCheck.getOrderProductId());
-        orderProductHistory.setRequestQuantityRecord(orderProductDTO.getRequestQuantity());
-        orderProductHistory.setStatusFrom(orderProductCheck.getStatus());
-        orderProductHistory.setStatusTo(orderProductDTO.getStatus());
-        orderProductHistory.setReason(orderProductDTO.getRequestReason());
-        orderDao.insertOrderProductHistory(orderProductHistory);
     }
 
     // 관리자의 주문 취소 요청 승인(배송 이전)

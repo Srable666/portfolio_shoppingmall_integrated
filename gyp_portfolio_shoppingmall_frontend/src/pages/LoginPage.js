@@ -126,10 +126,18 @@ const LoginPage = () => {
 
                     const from = location.state?.from || '/';
                     const categoryInfo = location.state?.categoryInfo;
+                    const product = location.state?.product;
+                    
+                    // 상품 페이지로 돌아가는 경우 필요한 상태 정보 전달
+                    const stateToPass = categoryInfo || product ? {
+                        categoryInfo,
+                        product,
+                        timestamp: Date.now()
+                    } : undefined;
                     
                     navigate(from, { 
                         replace: true,
-                        state: categoryInfo ? { categoryInfo } : undefined
+                        state: stateToPass
                     });
                 } else {
                     await logout({ skipApiCall: true, reason: 'unauthorized' });

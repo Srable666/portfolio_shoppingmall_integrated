@@ -76,9 +76,18 @@ export const AuthProvider = ({ children }) => {
                 sessionStorage.removeItem('accessToken');
                 localStorage.removeItem('isAdmin');
 
+                // 현재 경로 확인 및 올바른 리다이렉트 URL 설정
                 const currentPath = window.location.pathname;
-                const isAdminPage = currentPath === '/admin' || currentPath.startsWith('/admin/');
-                window.location.href = isAdminPage ? '/admin/login' : '/login';
+                const isAdminPage = currentPath.includes('/admin');
+                
+                // 기본 경로 포함하여 올바른 URL로 리다이렉트
+                const baseUrl = window.location.origin;
+                const redirectUrl = isAdminPage 
+                    ? `${baseUrl}/shopping-mall/admin/login`
+                    : `${baseUrl}/shopping-mall/login`;
+                
+                console.log(`Redirecting to: ${redirectUrl}`);
+                window.location.href = redirectUrl;
                 return Promise.reject(error);
             }
             return Promise.reject(error);
