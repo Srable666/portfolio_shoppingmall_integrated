@@ -249,15 +249,26 @@ const ProductDetail = () => {
         try {
             const response = await authRequest('get', `/product/getCategoryPath/${categoryId}`);
             
-            navigate(location.pathname + location.search, {
-                state: {
-                    categoryInfo: {
+            // 직접 카테고리 정보 업데이트
+            const categoryInfo = {
                 ...response.data[response.data.length - 1],
                 categoryPath: response.data
-                    }
+            };
+
+            // 브라우저 히스토리 업데이트
+            window.history.replaceState(
+                {
+                    ...location.state,
+                    categoryInfo
                 },
-                replace: true
-            });
+                '',
+                location.pathname + location.search
+            );
+
+            // 상위 컴포넌트(Layout)에 카테고리 정보 전달을 위한 커스텀 이벤트 발생
+            window.dispatchEvent(new CustomEvent('categoryInfoUpdate', {
+                detail: { categoryInfo }
+            }));
         } catch (error) {
             console.error('카테고리 경로 조회 에러:', error);
             
@@ -267,7 +278,7 @@ const ProductDetail = () => {
                 message.error(error.response.data || '예기치 못한 오류로 카테고리 경로 조회에 실패했습니다.');
             }
         }
-    }, [authRequest, navigate, location.pathname, location.search, message]);
+    }, [authRequest, location.pathname, location.search, location.state, message]);
 
     // 상품 품목 정보 조회
     const fetchProductItems = useCallback(async (productId) => {

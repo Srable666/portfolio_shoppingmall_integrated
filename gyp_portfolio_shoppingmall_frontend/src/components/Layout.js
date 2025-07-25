@@ -530,9 +530,16 @@ const AppLayout = () => {
     const updateCategoryInfo = useCallback((categoryInfo) => {
         if (!categoryInfo) return;
         
+        // 현재 카테고리와 동일한지 확인하여 불필요한 업데이트 방지
+        const isSameCategory = currentCategory && 
+            currentCategory.categoryId === categoryInfo.categoryId &&
+            JSON.stringify(categoryPath) === JSON.stringify(categoryInfo.categoryPath);
+            
+        if (isSameCategory) return;
+        
         setCurrentCategory(categoryInfo);
         setCategoryPath(categoryInfo.categoryPath);
-    }, []);
+    }, [currentCategory, categoryPath]);
     //#endregion Utility Functions
 
 
@@ -720,6 +727,20 @@ const AppLayout = () => {
         updateCategoryInfo(categoryInfo);        
         fetchSubCategories(categoryInfo.categoryId);
     }, [location.state?.categoryInfo, updateCategoryInfo, fetchSubCategories]);
+
+    // ProductDetail에서 발생하는 카테고리 정보 업데이트 이벤트 처리
+    useEffect(() => {
+        const handleCategoryUpdate = (event) => {
+            const { categoryInfo } = event.detail;
+            if (categoryInfo) {
+                updateCategoryInfo(categoryInfo);
+                fetchSubCategories(categoryInfo.categoryId);
+            }
+        };
+
+        window.addEventListener('categoryInfoUpdate', handleCategoryUpdate);
+        return () => window.removeEventListener('categoryInfoUpdate', handleCategoryUpdate);
+    }, [updateCategoryInfo, fetchSubCategories]);
 
     // 검색 닫기
     useEffect(() => {
