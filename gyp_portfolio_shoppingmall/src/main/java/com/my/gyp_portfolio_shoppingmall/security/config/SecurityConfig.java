@@ -65,12 +65,12 @@ public class SecurityConfig {
                                         })
                                 )
                                 .authorizeHttpRequests(auth -> auth
-                                                .requestMatchers(new AntPathRequestMatcher("/admin/**"))
-                                                .hasRole("ADMIN")
-                                                .anyRequest().permitAll())
+                                        .requestMatchers(new AntPathRequestMatcher("/shopping-mall/admin/**"))
+                                        .hasRole("ADMIN")
+                                        .anyRequest().permitAll())
                                 .addFilterBefore(
-                                                new JwtAuthenticationFilter(jwtSupport, tokenBlacklistService, userDao),
-                                                UsernamePasswordAuthenticationFilter.class);
+                                        new JwtAuthenticationFilter(jwtSupport, tokenBlacklistService, userDao),
+                                        UsernamePasswordAuthenticationFilter.class);
 
                 return http.build();
         }

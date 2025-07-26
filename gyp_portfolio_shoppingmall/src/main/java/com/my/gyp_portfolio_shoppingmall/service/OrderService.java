@@ -85,7 +85,8 @@ public class OrderService {
             if (productItemCheck.getStockQuantity() < orderProductDTO.getOriginalQuantity()) {
                 throw new ProductException.ProductItemQuantityException();
             }
-            if (productItemCheck.getIsActive() == 0 || productItemCheck.getIsDeleted() == 1) {
+            if (Integer.valueOf(0).equals(productItemCheck.getIsActive()) || 
+                Integer.valueOf(1).equals(productItemCheck.getIsDeleted())) {
                 throw new ProductException.ProductItemNotSaleException();
             }
         }
@@ -278,7 +279,7 @@ public class OrderService {
             }
 
             // 해당 바코드 재고의 productItemId와 주문 상품의 productItemId가 일치하는지 확인
-            if (productInventoryCheck.getProductItemId() != orderProductCheck.getProductItemId()) {
+            if (!productInventoryCheck.getProductItemId().equals(orderProductCheck.getProductItemId())) {
                 throw new ProductException.ProductInventoryRequestException();
             }
 
@@ -344,15 +345,6 @@ public class OrderService {
             throw new OrderException.OrderProductRequestException();
         }
 
-        // orderProduct 상태 업데이트(낙관적 잠금)
-        if (orderProductCheck.getStatus() == OrderProductStatus.DELIVERING) {
-            orderProductCheck.setStatus(OrderProductStatus.DELIVERED);
-        } else {
-            orderProductCheck.setStatus(OrderProductStatus.EXCHANGE_DELIVERED);
-        }
-        orderProductCheck.setVersion(deliveryInfoDTO.getVersion());
-        updateOrderProductStatusWithOptimisticLock(orderProductCheck);
-
         // 주문한 상품 이력 정보 생성
         OrderProductHistory orderProductHistory = new OrderProductHistory();
         orderProductHistory.setOrderProductId(orderProductCheck.getOrderProductId());
@@ -366,6 +358,15 @@ public class OrderService {
             orderProductHistory.setReason("교환 배송 완료");
         }
         orderDao.insertOrderProductHistory(orderProductHistory);
+
+        // orderProduct 상태 업데이트(낙관적 잠금)
+        if (orderProductCheck.getStatus() == OrderProductStatus.DELIVERING) {
+            orderProductCheck.setStatus(OrderProductStatus.DELIVERED);
+        } else {
+            orderProductCheck.setStatus(OrderProductStatus.EXCHANGE_DELIVERED);
+        }
+        orderProductCheck.setVersion(deliveryInfoDTO.getVersion());
+        updateOrderProductStatusWithOptimisticLock(orderProductCheck);
 
         // deliveryHistory 상태 업데이트
         DeliveryHistory deliveryHistory = orderDao.selectLatestDeliveringDeliveryHistory(deliveryInfoDTO.getOrderProductId());
@@ -535,6 +536,10 @@ public class OrderService {
     }
 
     // 관리자용 전체 주문 상품 리스트 조회(검색 조건 포함)
+    @Transactional(
+        readOnly = true,
+        isolation = Isolation.READ_COMMITTED
+    )
     public List<UserOrderHistoryDTO> getOrderListForAdmin(OrderListForAdminDTO orderListForAdminDTO) {
         Map<String, Object> params = new HashMap<>();
         params.put("merchantUid", orderListForAdminDTO.getMerchantUid());
@@ -616,7 +621,7 @@ public class OrderService {
         if (orderProductDTO.getStatus() == OrderProductStatus.EXCHANGE_REQUESTED) {
             orderProductCheck.setRequestQuantity(orderProductDTO.getRequestQuantity());
         } else {
-            orderProductCheck.setChangedQuantity(orderProductCheck.getOriginalQuantity() - orderProductDTO.getChangedQuantity());
+            orderProductCheck.setChangedQuantity(orderProductCheck.getOriginalQuantity() - orderProductDTO.getRequestQuantity());
             orderProductCheck.setRequestQuantity(orderProductDTO.getRequestQuantity());
         }
         orderProductCheck.setStatus(orderProductDTO.getStatus());
@@ -649,33 +654,37 @@ public class OrderService {
         productDao.StockRecovery(orderProductCheck);
 
         // orderProduct 상태 업데이트(낙관적 잠금, 취소 요청 -> 취소 완료)
-        if (orderProductCheck.getChangedQuantity() == 0) {
-            // 전체 취소인 경우 취소 완료로 업데이트
-            orderProductCheck.setStatus(OrderProductStatus.CANCELLED);
-        } else {
-            // 부분 취소인 경우 배송완료로 업데이트
-            orderProductCheck.setStatus(OrderProductStatus.DELIVERED);
-        }
+        orderProductCheck.setStatus(OrderProductStatus.CANCELED);
         orderProductCheck.setVersion(cancelOrderProductDTO.getVersion());
         updateOrderProductStatusWithOptimisticLock(orderProductCheck);
+
+        // 배송이력 업데이트(배송중 -> 취소)
+        DeliveryHistory deliveryHistory = orderDao.selectLatestDeliveredDeliveryHistory(orderProductCheck.getOrderProductId());
+        deliveryHistory.setDeliveryStatus(DeliveryStatus.CANCELED);
+        orderDao.updateDeliveryHistory(deliveryHistory);
 
         // 주문한 상품 이력 정보 생성
         OrderProductHistory orderProductHistory = new OrderProductHistory();
         orderProductHistory.setOrderProductId(orderProductCheck.getOrderProductId());
         orderProductHistory.setStatusFrom(OrderProductStatus.CANCEL_REQUESTED);
-        orderProductHistory.setStatusTo(OrderProductStatus.CANCELLED);
+        orderProductHistory.setStatusTo(OrderProductStatus.CANCELED);
         orderProductHistory.setReason("주문 취소 완료");
         orderDao.insertOrderProductHistory(orderProductHistory);
 
         // orders 업데이트
         Order currentOrder = orderDao.getOrderInfo(orderProductCheck.getOrderId());
-        // orderProduct의 changedQuantity와 finalPrice를 곱하여 currentTotalPrice 업데이트
-        BigDecimal totalPrice = orderProductCheck.getFinalPrice().multiply(BigDecimal.valueOf(orderProductCheck.getChangedQuantity()));
-        // 주문 상품 총 가격이 0이 아니면 배송비 추가
-        if (totalPrice.compareTo(BigDecimal.ZERO) != 0) {
-            totalPrice = totalPrice.add(BigDecimal.valueOf(currentOrder.getDeliveryFee()));
+        // 취소되는 금액만큼 차감된 주문 총 금액 계산
+        BigDecimal changedTotalPrice = currentOrder.getCurrentTotalPrice().subtract(orderProductCheck.getFinalPrice().multiply(BigDecimal.valueOf(orderProductCheck.getRequestQuantity())));
+        // 차감된 총 금액이 0원이면 배송비도 0으로 설정
+        if (changedTotalPrice.compareTo(BigDecimal.ZERO) == 0) {
+            currentOrder.setDeliveryFee(0);
         }
-        currentOrder.setCurrentTotalPrice(totalPrice);
+        // 배송비가 없었다가 취소되면서 50000원 이하가 되면 배송비 추가
+        else if (currentOrder.getDeliveryFee() == 0 && changedTotalPrice.compareTo(BigDecimal.valueOf(50000)) < 0) {
+            changedTotalPrice = changedTotalPrice.add(BigDecimal.valueOf(3000));
+            currentOrder.setDeliveryFee(3000);
+        }
+        currentOrder.setCurrentTotalPrice(changedTotalPrice);
         orderDao.updateOrder(currentOrder);
     }
 
@@ -763,7 +772,7 @@ public class OrderService {
 
             // 반품된 기존 productInventory 상태 업데이트(출고 -> 재고)
             returnProductInventory.setStatus(ProductInventoryStatus.IN_STOCK);
-            returnProductInventory.setOrderProductId(0);
+            returnProductInventory.setOrderProductId(orderProductCheck.getOrderProductId());
             productDao.updateProductInventory(returnProductInventory);
 
             // 반품으로 인한 재고 변동 이력 등록(출고 -> 재고)
@@ -785,13 +794,7 @@ public class OrderService {
         orderDao.updateDeliveryHistory(deliveryHistory);
         
         // orderProduct 상태 업데이트(낙관적 잠금, 반품 중 -> 반품 완료)
-        // 전체 반품인 경우 반품 완료로 업데이트
-        if (orderProductCheck.getChangedQuantity() == 0) {
-            orderProductCheck.setStatus(OrderProductStatus.RETURNED);
-        } else {
-            // 부분 반품인 경우 배송완료로 업데이트
-            orderProductCheck.setStatus(OrderProductStatus.DELIVERED);
-        }
+        orderProductCheck.setStatus(OrderProductStatus.RETURNED);
         orderProductCheck.setVersion(returnDeliveryInfoDTO.getVersion());
         updateOrderProductStatusWithOptimisticLock(orderProductCheck);
 
@@ -805,15 +808,16 @@ public class OrderService {
         orderDao.insertOrderProductHistory(newOrderProductHistory);
 
         // 주문 마스터 업데이트
-        Order order = orderDao.getOrderInfo(orderProductCheck.getOrderId());
-        // orderProduct의 changedQuantity와 finalPrice를 곱하여 currentTotalPrice 업데이트
-        BigDecimal totalPrice = orderProductCheck.getFinalPrice().multiply(BigDecimal.valueOf(orderProductCheck.getChangedQuantity()));
-        // 주문 상품 총 가격이 0이 아니면 배송비 추가
-        if (totalPrice.compareTo(BigDecimal.ZERO) != 0) {
-            totalPrice = totalPrice.add(BigDecimal.valueOf(order.getDeliveryFee()));
+        Order currentOrder = orderDao.getOrderInfo(orderProductCheck.getOrderId());
+        // 반품되는 금액만큼 차감된 주문 총 금액 계산
+        BigDecimal changedTotalPrice = currentOrder.getCurrentTotalPrice().subtract(orderProductCheck.getFinalPrice().multiply(BigDecimal.valueOf(orderProductCheck.getRequestQuantity())));
+        // 배송비가 없었다가 반품되면서 50000원 이하가 되면 배송비 추가
+        if (currentOrder.getDeliveryFee() == 0 && changedTotalPrice.compareTo(BigDecimal.valueOf(50000)) < 0) {
+            changedTotalPrice = changedTotalPrice.add(BigDecimal.valueOf(3000));
+            currentOrder.setDeliveryFee(3000);
         }
-        order.setCurrentTotalPrice(totalPrice);
-        orderDao.updateOrder(order);
+        currentOrder.setCurrentTotalPrice(changedTotalPrice);
+        orderDao.updateOrder(currentOrder);
     }
 
     // 관리자의 주문 교환 요청 승인(교환 요청 -> 교환 반품 중)
@@ -900,7 +904,7 @@ public class OrderService {
         
             // 반품된 기존 ProductInventory 상태 업데이트(출고 -> 재고)
             returnProductInventory.setStatus(ProductInventoryStatus.IN_STOCK);
-            returnProductInventory.setOrderProductId(0);
+            returnProductInventory.setOrderProductId(orderProductCheck.getOrderProductId());
             productDao.updateProductInventory(returnProductInventory);
 
             // 반품으로 인한 재고 변동 이력 등록(출고 -> 재고)
@@ -1017,11 +1021,11 @@ public class OrderService {
 
     // 배송 이력 정보 조회
     public List<DeliveryHistory> getDeliveryHistory(OrderProductDTO orderProductDTO) {
-        OrderProduct orderProductCheck = new OrderProduct();
-        orderProductCheck.setOrderProductId(orderProductDTO.getOrderProductId());
-        orderProductCheck = orderDao.getOrderProduct(orderProductCheck);
+        OrderProduct orderProduct = new OrderProduct();
+        orderProduct.setOrderProductId(orderProductDTO.getOrderProductId());
+        OrderProduct orderProductInfo = orderDao.getOrderProduct(orderProduct);
 
-        if (orderProductCheck == null) {
+        if (orderProductInfo == null) {
             throw new OrderException.OrderProductNotFoundException();
         }
         return orderDao.getDeliveryHistory(orderProductDTO.getOrderProductId());

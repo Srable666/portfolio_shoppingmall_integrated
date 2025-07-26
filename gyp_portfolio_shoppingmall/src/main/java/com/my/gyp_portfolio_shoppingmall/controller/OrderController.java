@@ -117,7 +117,7 @@ public class OrderController {
         }
     }
 
-    // 관리자용 주문 내역 업데이트(배송중 -> 배송완료)
+    // 관리자용 주문 내역 업데이트(배송중 -> 배송완료 / 교환 배송중 -> 교환 배송완료)
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("/updateOrderStatusToDelivered")
     public ResponseEntity<?> updateOrderStatusToDelivered(@RequestBody DeliveryInfoDTO deliveryInfoDTO) {

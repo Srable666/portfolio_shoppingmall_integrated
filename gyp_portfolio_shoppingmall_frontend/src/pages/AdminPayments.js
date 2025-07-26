@@ -281,7 +281,8 @@ const AdminPayments = () => {
             'READY': 'default',
             'PAID': 'success',
             'CANCELLED': 'error',
-            'FAILED': 'error'
+            'FAILED': 'error',
+            'PARTIAL_CANCELLED': 'warning'
         };
         return colorMap[status] || 'default';
     };
@@ -292,7 +293,8 @@ const AdminPayments = () => {
             'READY': '결제대기',
             'PAID': '결제완료',
             'CANCELLED': '결제취소',
-            'FAILED': '결제실패'
+            'FAILED': '결제실패',
+            'PARTIAL_CANCELLED': '부분 취소'
         };
         return labelMap[status] || status;
     };    
@@ -425,7 +427,8 @@ const AdminPayments = () => {
                 { text: '결제대기', value: 'READY' },
                 { text: '결제완료', value: 'PAID' },
                 { text: '결제취소', value: 'CANCELLED' },
-                { text: '결제실패', value: 'FAILED' }
+                { text: '결제실패', value: 'FAILED' },
+                { text: '부분 취소', value: 'PARTIAL_CANCELLED' }
             ],
             onFilter: (value, record) => record.status === value
         },

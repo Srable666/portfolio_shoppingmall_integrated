@@ -298,7 +298,7 @@ public class PaymentService {
         switch (webhookDTO.getStatus()) {
             case "PAID" -> handlePaidStatus(webhookDTO, order);
             case "FAILED" -> handleFailedStatus(webhookDTO, order);
-            case "CANCELLED" -> handleCancelledStatus(webhookDTO, order);
+            case "CANCELLED" -> handleCanceledStatus(webhookDTO, order);
             default -> {
                 String message = "처리되지 않은 결제 상태: " + webhookDTO.getStatus();
                 savePaymentHistory(
@@ -749,7 +749,7 @@ public class PaymentService {
     }
 
     // 결제 취소 처리
-    private void handleCancelledStatus(PortOneWebhookDTO webhookDTO, Order order) {
+    private void handleCanceledStatus(PortOneWebhookDTO webhookDTO, Order order) {
         // 주문 상품 목록 조회 및 검증
         List<OrderProduct> orderProducts = getAndValidateOrderProducts(order.getOrderId());
 
@@ -757,7 +757,7 @@ public class PaymentService {
         savePaymentCancellationHistory(webhookDTO);
 
         // 주문 상품 처리
-        handleCancelledOrderProducts(orderProducts);
+        handleCanceledOrderProducts(orderProducts);
 
         // 주문 금액 초기화
         updateOrderAmount(order);
@@ -856,12 +856,12 @@ public class PaymentService {
     }
 
     // 취소된 주문 상품 처리
-    private void handleCancelledOrderProducts(List<OrderProduct> orderProducts) {
+    private void handleCanceledOrderProducts(List<OrderProduct> orderProducts) {
         for (OrderProduct orderProduct : orderProducts) {
             validateCancellableOrderStatus(orderProduct);
             recoverProductStock(orderProduct);
-            OrderProductStatus prevStatus = updateCancelledOrderProductStatus(orderProduct);
-            createCancelledOrderProductHistory(orderProduct, prevStatus);
+            OrderProductStatus prevStatus = updateCanceledOrderProductStatus(orderProduct);
+            createCanceledOrderProductHistory(orderProduct, prevStatus);
             updateDeliveryStatusIfNeeded(orderProduct, prevStatus);
         }
     }
@@ -870,7 +870,7 @@ public class PaymentService {
     private void updateFailedOrderProductStatus(OrderProduct orderProduct) {
         orderProduct.setChangedQuantity(0);
         orderProduct.setFinalPrice(BigDecimal.ZERO);
-        orderProduct.setStatus(OrderProductStatus.CANCELLED);
+        orderProduct.setStatus(OrderProductStatus.CANCELED);
 
         orderService.updateOrderProductStatusWithOptimisticLock(orderProduct);
     }
@@ -880,7 +880,7 @@ public class PaymentService {
         OrderProductHistory history = new OrderProductHistory();
         history.setOrderProductId(orderProduct.getOrderProductId());
         history.setStatusFrom(OrderProductStatus.PAYMENT_PENDING);
-        history.setStatusTo(OrderProductStatus.CANCELLED);
+        history.setStatusTo(OrderProductStatus.CANCELED);
         history.setReason("결제 실패로 인한 주문 취소");
 
         orderDao.insertOrderProductHistory(history);
@@ -893,11 +893,11 @@ public class PaymentService {
     }
 
     // 취소된 주문 상품 이력 생성
-    private void createCancelledOrderProductHistory(OrderProduct orderProduct, OrderProductStatus prevStatus) {
+    private void createCanceledOrderProductHistory(OrderProduct orderProduct, OrderProductStatus prevStatus) {
         OrderProductHistory history = new OrderProductHistory();
         history.setOrderProductId(orderProduct.getOrderProductId());
         history.setStatusFrom(prevStatus);
-        history.setStatusTo(OrderProductStatus.CANCELLED);
+        history.setStatusTo(OrderProductStatus.CANCELED);
         history.setReason("결제 취소 처리");
 
         orderDao.insertOrderProductHistory(history);
@@ -926,11 +926,11 @@ public class PaymentService {
     }
 
     // 취소된 주문 상품 상태 업데이트
-    private OrderProductStatus updateCancelledOrderProductStatus(OrderProduct orderProduct) {
+    private OrderProductStatus updateCanceledOrderProductStatus(OrderProduct orderProduct) {
         OrderProductStatus prevStatus = orderProduct.getStatus();
         orderProduct.setChangedQuantity(0);
         orderProduct.setFinalPrice(BigDecimal.ZERO);
-        orderProduct.setStatus(OrderProductStatus.CANCELLED);
+        orderProduct.setStatus(OrderProductStatus.CANCELED);
 
         orderService.updateOrderProductStatusWithOptimisticLock(orderProduct);
 
@@ -1135,7 +1135,7 @@ public class PaymentService {
         PaymentDataDTO paymentDataDTO = new PaymentDataDTO();
         paymentDataDTO.setId(webhookDTO.getImpUid());
         paymentDataDTO.setOrderRef(webhookDTO.getMerchantUid());
-        paymentDataDTO.setStatus("CANCELLED");
+        paymentDataDTO.setStatus("CANCELED");
 
         PaymentDataDTO.PaymentAmountDTO amount = new PaymentDataDTO.PaymentAmountDTO();
         amount.setTotal(webhookDTO.getAmount());  // long 타입 사용
@@ -1162,7 +1162,7 @@ public class PaymentService {
             DeliveryHistory deliveryHistory = 
                 orderDao.selectLatestPreparingDeliveryHistory(orderProduct.getOrderProductId());
             if (deliveryHistory != null) {
-                deliveryHistory.setDeliveryStatus(DeliveryStatus.CANCELLED);
+                deliveryHistory.setDeliveryStatus(DeliveryStatus.CANCELED);
                 orderDao.updateDeliveryHistory(deliveryHistory);
             }
         }

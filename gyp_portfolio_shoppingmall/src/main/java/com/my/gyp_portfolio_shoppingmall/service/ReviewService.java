@@ -52,6 +52,7 @@ public class ReviewService {
         }
 
         // 주문 상품 정보 유효성 검증
+        reviewDTO.setUserId(user.getUserId());
         int orderProductCheck = orderDao.checkUserOrderedProduct(reviewDTO);
         if (orderProductCheck == 0) {
             throw new ReviewException.InvalidOrderProductException();

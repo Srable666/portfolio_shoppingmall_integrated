@@ -217,20 +217,19 @@ const ProductMasterCard = ({ product }) => {
         try {
             // 상품의 카테고리 경로 조회
             const categoryPathResponse = await authRequest('get', `/product/getCategoryPath/${product.categoryId}`);
-            if (categoryPathResponse.data) {
-                const categoryInfo = {
-                    ...categoryPathResponse.data[categoryPathResponse.data.length - 1],
-                    categoryPath: categoryPathResponse.data
-                };
-                
-                // 카테고리 정보와 함께 페이지 이동
-                navigate(`/${categoryInfo.code}/${product.code}`, {
-                    state: { 
-                        categoryInfo,
-                        product
-                    }
-                });
-            }
+            
+            const categoryInfo = {
+                ...categoryPathResponse.data[categoryPathResponse.data.length - 1],
+                categoryPath: categoryPathResponse.data
+            };
+            
+            // 카테고리 정보와 함께 페이지 이동
+            navigate(`/${categoryInfo.code}/${product.code}`, {
+                state: { 
+                    categoryInfo,
+                    product
+                }
+            });
         } catch (error) {
             console.error('카테고리 경로 조회 실패:', error);
             message.error('페이지 이동 중 오류가 발생했습니다.');

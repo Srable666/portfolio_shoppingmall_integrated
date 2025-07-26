@@ -645,9 +645,9 @@ const ProductDetail = () => {
                                                     <>
                                                         <Text strong>{review.userName}</Text>
                                                         <Text type="secondary" style={{ fontSize: 12, marginLeft: 8 }}>
-                                                            {review.updatedAt 
-                                                                ? `${new Date(review.updatedAt).toLocaleDateString()} (수정)`
-                                                                : new Date(review.createdAt).toLocaleDateString()
+                                                            {review.createdAt === review.updatedAt 
+                                                                ? new Date(review.createdAt).toLocaleDateString()
+                                                                : `${new Date(review.updatedAt).toLocaleDateString()} (수정)`
                                                             }
                                                         </Text>
                                                     </>

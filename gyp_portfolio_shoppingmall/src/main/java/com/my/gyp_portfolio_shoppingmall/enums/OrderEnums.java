@@ -9,7 +9,7 @@ public class OrderEnums {
         DELIVERED,
         DELIVERY_CONFIRMED,
         CANCEL_REQUESTED,
-        CANCELLED,
+        CANCELED,
         RETURN_REQUESTED,
         RETURNING,
         RETURNED,
@@ -43,7 +43,7 @@ public class OrderEnums {
         DELIVERING,
         DELIVERED,
         CONFIRMED,
-        CANCELLED,
+        CANCELED,
         RETURN,
         EXCHANGE
     }

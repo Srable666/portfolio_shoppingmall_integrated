@@ -250,7 +250,7 @@ const AdminOrders = () => {
         { value: 'DELIVERED', label: '배송완료' },
         { value: 'DELIVERY_CONFIRMED', label: '구매확정' },
         { value: 'CANCEL_REQUESTED', label: '취소요청' },
-        { value: 'CANCELLED', label: '취소완료' },
+        { value: 'CANCELED', label: '취소완료' },
         { value: 'RETURN_REQUESTED', label: '반품요청' },
         { value: 'RETURNING', label: '반품중' },
         { value: 'RETURNED', label: '반품완료' },
@@ -278,7 +278,7 @@ const AdminOrders = () => {
             'DELIVERED': 'success',
             'DELIVERY_CONFIRMED': 'success',
             'CANCEL_REQUESTED': 'error',
-            'CANCELLED': 'default',
+            'CANCELED': 'default',
             'RETURN_REQUESTED': 'error',
             'RETURNING': 'warning',
             'RETURNED': 'default',
@@ -390,7 +390,7 @@ const AdminOrders = () => {
             'DELIVERING': '배송중',
             'DELIVERED': '배송완료',
             'CONFIRMED': '구매확정',
-            'CANCELLED': '취소',
+            'CANCELED': '취소',
             'RETURN': '반품 처리',
             'EXCHANGE': '교환 처리'
         };
@@ -504,6 +504,7 @@ const AdminOrders = () => {
                     const response = await authRequest('get', '/order/getDeliveryHistory', {
                         orderProductId: product.orderProductId
                     });
+                    console.log(response.data);
                 
                     newDeliveryHistories[product.orderProductId] = response.data;
                 } catch (error) {
@@ -548,7 +549,7 @@ const AdminOrders = () => {
         try {
             // 배송 정보가 필요한 경우(deliveryInfoDTO 타입)
             if (deliveryInfo) {
-                await authRequest('post', `/api/order${endpoint}`, {
+                await authRequest('post', `/order${endpoint}`, {
                     ...deliveryInfo,
                     orderProductId: record.product.orderProductId,
                     version: record.product.version
@@ -556,7 +557,7 @@ const AdminOrders = () => {
             } 
             // 배송 정보가 필요없는 경우(OrderProductDTO 타입)
             else {
-                await authRequest('post', `/api/order${endpoint}`, {
+                await authRequest('post', `/order${endpoint}`, {
                     orderProductId: record.product.orderProductId,
                     orderId: record.orderId,
                     status: record.product.status,
@@ -693,7 +694,7 @@ const AdminOrders = () => {
         const product = record.product;
         return (
             <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {`${product.productName} (${product.size}/${product.color}, ${product.changedQuantity}개)`}
+                {`${product.productName} (${product.size}/${product.color}, ${product.originalQuantity}개)`}
             </div>
         );
     }, []);
@@ -923,7 +924,7 @@ const AdminOrders = () => {
         },
         {
             title: '수량',
-            dataIndex: 'changedQuantity',
+            dataIndex: 'originalQuantity',
             key: 'quantity',
             align: 'center',
         },
