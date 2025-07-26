@@ -504,7 +504,6 @@ const AdminOrders = () => {
                     const response = await authRequest('get', '/order/getDeliveryHistory', {
                         orderProductId: product.orderProductId
                     });
-                    console.log(response.data);
                 
                     newDeliveryHistories[product.orderProductId] = response.data;
                 } catch (error) {

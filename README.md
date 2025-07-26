@@ -4,18 +4,45 @@
 
 실무급 전자상거래 플랫폼을 목표로, 현대적인 웹 기술 스택과 아키텍처를 활용하여 구현된 포트폴리오 프로젝트입니다.
 
-## 📺 데모 ⚠️(미완성/검토 요망)
+## 📺 데모
 
 ### 라이브 데모
-🔗 **[Live Demo]()**  
+🔗 **[Live Demo](https://gyp-myportfolio.com/shopping-mall)**  
 *AWS Lightsail에서 호스팅 중*
 
-> ⚠️ **현재 상태**: 결제 시스템 연동 및 주문 관리 기능 개발 진행 중 (약 85% 완성)
+> ⚠️ **현재 상태**: 포트원 결제 시스템 연동 및 주문 관리 기능 구현 진행 중 (약 85% 완성)
 
 ### 스크린샷
-*(스크린샷 이미지들 추가 예정)*
 
-### 📝 이미지 출처
+#### 🖥️ 데스크톱 버전
+| 홈페이지 | 상품 목록 |
+|:---:|:---:|
+| ![홈페이지](./screenshots/01_homepage_desktop.png) | ![상품 목록](./screenshots/02_product_list_desktop.png) |
+
+| 상품 상세 | 장바구니 |
+|:---:|:---:|
+| ![상품 상세](./screenshots/03_product_detail_desktop.png) | ![장바구니](./screenshots/04_cart_desktop.png) |
+
+| 주문 관리 |
+|:---:|
+| ![주문 관리](./screenshots/05_order_management_desktop.png) |
+
+#### 🔧 관리자 페이지
+| 대시보드 | 상품 관리 |
+|:---:|:---:|
+| ![관리자 대시보드](./screenshots/06_admin_dashboard_desktop.png) | ![상품 관리](./screenshots/07_admin_product_management_desktop.png) |
+
+| 주문 관리 |
+|:---:|
+| ![주문 관리](./screenshots/08_admin_order_management_desktop.png) |
+
+#### 📱 모바일 반응형
+| 홈페이지 | 상품 목록 |
+|:---:|:---:|
+| ![모바일 홈](./screenshots/09_homepage_mobile.png) | ![모바일 상품목록](./screenshots/10_product_list_mobile.png) |
+
+
+### 📝 상품 이미지 출처
 본 포트폴리오 프로젝트의 상품 이미지는 **[무신사(MUSINSA)](https://www.musinsa.com)**에서 제공하는 이미지를 사용했습니다. 
 이는 포트폴리오 개발 목적으로만 사용되며, 상업적 이용이 아닌 기술 시연을 위한 것입니다.
 
@@ -31,7 +58,7 @@
 - **3단계 상품 구조** (마스터/품목/재고)로 확장 가능한 재고 관리
 - **트랜잭션 격리 수준 REPEATABLE_READ** 적용으로 데이터 정합성 확보
 
-### 💳 실시간 테스트 결제 시스템 *(개발 중)*
+### 💳 실시간 테스트 결제 시스템 *(프론트엔드 개발 중)*
 - **포트원 API 연동 + 웹훅 처리**로 결제 상태 실시간 동기화
 - **데스크톱 팝업 + 모바일 리디렉션** 방식 지원
 - **부분 취소/반품/교환** 비즈니스 로직 구현
@@ -48,7 +75,7 @@
 - **Security**: Spring Security + JWT + Redis
 - **Database**: MyBatis + MariaDB
 - **Infrastructure**: AWS Lightsail + Nginx + Cloudflare
-- **External APIs**: PortOne (결제) *(개발 중)*, JavaMail (이메일 발송)
+- **External APIs**: PortOne (결제/*개발 중*), JavaMail (이메일 발송)
 - **Concurrency**: AOP 기반 낙관적 락, 비관적 락
 
 ### Frontend
@@ -72,18 +99,18 @@
 - [x] **직관적 주문 프로세스**: 장바구니 → 주문 → 결제 → 배송 추적
 - [x] **실시간 재고 관리**: 동시 주문 시 재고 충돌 방지 + 재고 수량 초과 주문 방지
 
-### 💳 결제 & 주문 관리
-- [ ] **안전한 결제 시스템**: 포트원 테스트 버전 연동 + 웹훅 실시간 동기화 *(개발 중)*
-- [ ] **결제 완료 처리**: 결제 성공 후 DB 기록 및 상태 업데이트 *(개발 중)*
-- [ ] **주문 상태 관리**: 결제대기→결제완료→배송중→배송완료 흐름 *(개발 중)*
-- [ ] **반품/취소/교환**: 관리자 및 회원 요청 처리 시스템 *(개발 중)*
+### 💳 결제 & 주문 관리 *(개발중)*
+- [ ] **안전한 결제 시스템**: 포트원 테스트 버전 연동 + 웹훅 실시간 동기화 
+- [ ] **결제 완료 처리**: 결제 성공 후 DB 기록 및 상태 업데이트
+- [ ] **주문 상태 관리**: 결제대기→결제완료→배송중→배송완료 흐름
+- [ ] **반품/취소/교환**: 관리자 및 회원 요청 처리 시스템
 
 ### 📝 리뷰 시스템
 - [x] **검증된 리뷰**: 실제 구매 고객만 작성 가능 + 중복 방지
 - [x] **편리한 리뷰 관리**: 수정/삭제 + 상품별 리뷰 조회
 
 ### 🔧 관리자 대시보드
-- [ ] **종합 비즈니스 관리**: 회원/상품/주문/결제 통합 관리 *(개발 중)*
+- [ ] **종합 비즈니스 관리**: 회원/상품/주문/결제 통합 관리
 - [x] **실시간 통계**: 매출/주문/회원 현황
 - [x] **고급 검색 시스템**: 다양한 조건으로 데이터 필터링 및 검색
 
@@ -118,8 +145,8 @@
 
 ### 📝 알려진 제한사항
 - 현재 결제 테스트는 포트원 테스트 환경에서만 가능
-- 일부 관리자 주문 처리 기능은 UI만 구현되어 있음
-- 결제 성공 후 DB 동기화 로직 개발 중
+- 일부 관리자 주문 처리 기능과 일부 회원 주문 관리 기능은 UI만 구현되어 있음
+- 포트원 결제 후 DB 동기화 로직 개발 중
 
 ## 🚦 시작하기
 
@@ -252,9 +279,9 @@ REACT_APP_PORTONE_IMP=your_portone_imp_code
 ```
 
 ### 🌐 접속 정보
-- **프론트엔드**: http://localhost:3000
-- **관리자 로그인**: http://localhost:3000/admin/login
-- **백엔드 API**: http://localhost:8080/gyp-shopping-mall
+- **프론트엔드**: http://localhost:3000/shopping-mall
+- **관리자 로그인**: http://localhost:3000/shopping-mall/admin/login
+- **백엔드 API**: http://localhost:3000/api/*
 
 ### 🔧 트러블슈팅
 
@@ -318,7 +345,7 @@ sudo systemctl restart redis-server
 
 ### 📚 추가 리소스
 - **데이터베이스 스키마**: [portfolio_shopping_mall_schema.sql](./gyp_portfolio_shoppingmall/database/portfolio_shopping_mall_schema.sql)
-- **포트원 결제 테스트**: [포트원 개발자 문서](https://developers.portone.io/docs)
+- **포트원 결제 테스트**: [포트원 개발자 문서](https://developers.portone.io/opi/ko/readme?v=v1)
 - **환경 설정 가이드**: 위의 '시작하기' 섹션 참조
 
 ### 🔗 관련 기술 문서
@@ -376,13 +403,13 @@ sudo systemctl restart redis-server
 ### 📚 상세 개발 과정
 전체 개발 과정의 상세한 기록과 기술적 의사결정 과정은 아래 링크에서 확인하실 수 있습니다.
 
-**👉 [상세 개발 과정 보기 (Notion)](https://mysterious-meteoroid-685.notion.site/23219636adbd8091b0e9c8f29cebba3a?source=copy_link)**
+**👉 [상세 개발 과정 기록 보기 (Notion)](https://mysterious-meteoroid-685.notion.site/23219636adbd8091b0e9c8f29cebba3a?source=copy_link)**
 
-## 📞 연락처 ⚠️(미완성/검토 요망)
+## 📞 연락처
 
 - **개발자**: 권용필
 - **이메일**: srable6666@gmail.com
-- **LinkedIn**: [링크]
-- **포트폴리오**: [링크]
+- **GitHub**: https://github.com/Srable666
+- **포트폴리오**: https://gyp-myportfolio.com
 
 ---

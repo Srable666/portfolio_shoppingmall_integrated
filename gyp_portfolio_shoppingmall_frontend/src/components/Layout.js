@@ -674,9 +674,9 @@ const AppLayout = () => {
         })
     };
 
-    // 주문관리 클릭 이벤트 처리
+    // 주문내역 클릭 이벤트 처리
     const handleOrdersClick = () => {
-        navigate('/mypage/orders', { 
+        navigate('/mypage/orderinfo', { 
             state: { 
                 refresh: true,
                 timestamp: Date.now()
@@ -768,7 +768,7 @@ const AppLayout = () => {
             },
             {
                 key: 'orders',
-                label: '주문관리',
+                label: '주문내역',
                 icon: <ShoppingOutlined />,
                 onClick: handleOrdersClick
             }

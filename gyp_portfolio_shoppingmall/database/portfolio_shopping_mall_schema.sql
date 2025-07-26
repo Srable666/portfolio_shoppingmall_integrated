@@ -1,5 +1,5 @@
 -- --------------------------------------------------------
--- 호스트:                          54.180.232.189
+-- 호스트:                          **.***.***.***
 -- 서버 버전:                        10.11.13-MariaDB-0ubuntu0.24.04.1-log - Ubuntu 24.04
 -- 서버 OS:                        debian-linux-gnu
 -- HeidiSQL 버전:                  12.6.0.6765
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS `categories` (
   UNIQUE KEY `code` (`code`),
   KEY `FK_CP` (`parent_category_id`),
   CONSTRAINT `FK_CP` FOREIGN KEY (`parent_category_id`) REFERENCES `categories` (`category_id`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- 내보낼 데이터가 선택되어 있지 않습니다.
 
@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS `delivery_histories` (
   PRIMARY KEY (`delivery_history_id`) USING BTREE,
   KEY `order_product_id` (`order_product_id`),
   CONSTRAINT `delivery_histories_ibfk_1` FOREIGN KEY (`order_product_id`) REFERENCES `order_products` (`order_product_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- 내보낼 데이터가 선택되어 있지 않습니다.
 
@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS `inventory_histories` (
   KEY `product_item_id` (`product_inventory_id`) USING BTREE,
   CONSTRAINT `FK_inventory_histories_order_products` FOREIGN KEY (`order_product_id`) REFERENCES `order_products` (`order_product_id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `FK_inventory_histories_product_inventories` FOREIGN KEY (`product_inventory_id`) REFERENCES `product_inventories` (`product_inventory_id`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=211 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=758 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- 내보낼 데이터가 선택되어 있지 않습니다.
 
@@ -85,7 +85,7 @@ CREATE TABLE IF NOT EXISTS `login_histories` (
   PRIMARY KEY (`login_history_id`),
   KEY `FK_login_histories_users` (`user_id`),
   CONSTRAINT `FK_login_histories_users` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=586 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=671 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- 내보낼 데이터가 선택되어 있지 않습니다.
 
@@ -109,7 +109,7 @@ CREATE TABLE IF NOT EXISTS `orders` (
   KEY `merchant_uid` (`merchant_uid`),
   KEY `orders_ibfk_1` (`user_id`),
   CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- 내보낼 데이터가 선택되어 있지 않습니다.
 
@@ -126,7 +126,7 @@ CREATE TABLE IF NOT EXISTS `order_products` (
   `final_price` decimal(10,2) NOT NULL,
   `size` varchar(50) NOT NULL DEFAULT '',
   `color` varchar(50) NOT NULL DEFAULT '',
-  `status` enum('PAYMENT_PENDING','PAYMENT_COMPLETED','PREPARING','DELIVERING','DELIVERED','DELIVERY_CONFIRMED','CANCEL_REQUESTED','CANCELLED','RETURN_REQUESTED','RETURNING','RETURNED','EXCHANGE_REQUESTED','EXCHANGE_RETURNING','EXCHANGE_PREPARING','EXCHANGE_DELIVERING','EXCHANGE_DELIVERED') DEFAULT 'PAYMENT_PENDING',
+  `status` enum('PAYMENT_PENDING','PAYMENT_COMPLETED','PREPARING','DELIVERING','DELIVERED','DELIVERY_CONFIRMED','CANCEL_REQUESTED','CANCELED','RETURN_REQUESTED','RETURNING','RETURNED','EXCHANGE_REQUESTED','EXCHANGE_RETURNING','EXCHANGE_PREPARING','EXCHANGE_DELIVERING','EXCHANGE_DELIVERED') DEFAULT 'PAYMENT_PENDING',
   `request_reason` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
@@ -136,7 +136,7 @@ CREATE TABLE IF NOT EXISTS `order_products` (
   KEY `order_products_ibfk_2` (`product_item_id`) USING BTREE,
   CONSTRAINT `FK_order_products_product_items` FOREIGN KEY (`product_item_id`) REFERENCES `product_items` (`product_item_id`) ON UPDATE CASCADE,
   CONSTRAINT `order_products_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`) ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- 내보낼 데이터가 선택되어 있지 않습니다.
 
@@ -145,14 +145,14 @@ CREATE TABLE IF NOT EXISTS `order_product_histories` (
   `order_product_history_id` int(11) NOT NULL AUTO_INCREMENT,
   `order_product_id` int(11) NOT NULL,
   `request_quantity_record` int(11) DEFAULT NULL,
-  `status_from` enum('PAYMENT_PENDING','PREPARING','DELIVERING','DELIVERED','DELIVERY_CONFIRMED','CANCEL_REQUESTED','CANCELLED','RETURN_REQUESTED','RETURNING','RETURNED','EXCHANGE_REQUESTED','EXCHANGE_RETURNING','EXCHANGE_PREPARING','EXCHANGE_DELIVERING','EXCHANGE_DELIVERED') DEFAULT NULL,
-  `status_to` enum('PAYMENT_PENDING','PREPARING','DELIVERING','DELIVERED','DELIVERY_CONFIRMED','CANCEL_REQUESTED','CANCELLED','RETURN_REQUESTED','RETURNING','RETURNED','EXCHANGE_REQUESTED','EXCHANGE_RETURNING','EXCHANGE_PREPARING','EXCHANGE_DELIVERING','EXCHANGE_DELIVERED') DEFAULT NULL,
+  `status_from` enum('PAYMENT_PENDING','PAYMENT_COMPLETED','PREPARING','DELIVERING','DELIVERED','DELIVERY_CONFIRMED','CANCEL_REQUESTED','CANCELED','RETURN_REQUESTED','RETURNING','RETURNED','EXCHANGE_REQUESTED','EXCHANGE_RETURNING','EXCHANGE_PREPARING','EXCHANGE_DELIVERING','EXCHANGE_DELIVERED') DEFAULT NULL,
+  `status_to` enum('PAYMENT_PENDING','PAYMENT_COMPLETED','PREPARING','DELIVERING','DELIVERED','DELIVERY_CONFIRMED','CANCEL_REQUESTED','CANCELED','RETURN_REQUESTED','RETURNING','RETURNED','EXCHANGE_REQUESTED','EXCHANGE_RETURNING','EXCHANGE_PREPARING','EXCHANGE_DELIVERING','EXCHANGE_DELIVERED') DEFAULT NULL,
   `reason` varchar(500) DEFAULT '',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`order_product_history_id`),
   KEY `order_product_id` (`order_product_id`),
   CONSTRAINT `FK_order_product_histories_order_products` FOREIGN KEY (`order_product_id`) REFERENCES `order_products` (`order_product_id`) ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=96 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- 내보낼 데이터가 선택되어 있지 않습니다.
 
@@ -180,7 +180,7 @@ CREATE TABLE IF NOT EXISTS `payment_histories` (
   KEY `FK_payment_histories_orders` (`order_id`),
   CONSTRAINT `FK_payment_histories_orders` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`) ON UPDATE CASCADE,
   CONSTRAINT `FK_payment_histories_orders_2` FOREIGN KEY (`merchant_uid`) REFERENCES `orders` (`merchant_uid`) ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- 내보낼 데이터가 선택되어 있지 않습니다.
 
@@ -204,7 +204,7 @@ CREATE TABLE IF NOT EXISTS `products` (
   KEY `FK_PC` (`category_id`),
   KEY `code` (`code`),
   CONSTRAINT `FK_PC` FOREIGN KEY (`category_id`) REFERENCES `categories` (`category_id`) ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=132 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- 내보낼 데이터가 선택되어 있지 않습니다.
 
@@ -223,7 +223,7 @@ CREATE TABLE IF NOT EXISTS `product_inventories` (
   KEY `order_product_id` (`order_product_id`),
   CONSTRAINT `FK_product_inventories_order_products` FOREIGN KEY (`order_product_id`) REFERENCES `order_products` (`order_product_id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `FK_product_inventories_product_items` FOREIGN KEY (`product_item_id`) REFERENCES `product_items` (`product_item_id`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=206 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=736 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- 내보낼 데이터가 선택되어 있지 않습니다.
 
@@ -244,7 +244,7 @@ CREATE TABLE IF NOT EXISTS `product_items` (
   PRIMARY KEY (`product_item_id`),
   KEY `product_id` (`product_id`),
   CONSTRAINT `FK_product_items_products` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=45 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=243 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- 내보낼 데이터가 선택되어 있지 않습니다.
 
@@ -267,7 +267,7 @@ CREATE TABLE IF NOT EXISTS `reviews` (
   CONSTRAINT `FK_reviews_order_products` FOREIGN KEY (`order_product_id`) REFERENCES `order_products` (`order_product_id`) ON UPDATE CASCADE,
   CONSTRAINT `FK_reviews_product_items` FOREIGN KEY (`product_item_id`) REFERENCES `product_items` (`product_item_id`) ON UPDATE CASCADE,
   CONSTRAINT `reviews_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- 내보낼 데이터가 선택되어 있지 않습니다.
 
@@ -291,7 +291,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   PRIMARY KEY (`user_id`) USING BTREE,
   UNIQUE KEY `email` (`email`),
   KEY `reset_token` (`reset_token`)
-) ENGINE=InnoDB AUTO_INCREMENT=536 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- 내보낼 데이터가 선택되어 있지 않습니다.
 

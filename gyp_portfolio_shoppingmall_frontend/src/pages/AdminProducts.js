@@ -1392,7 +1392,6 @@ const AdminProducts = () => {
         message.loading('처리 중...');
 
         try {
-            console.log('Form values:', values);
             const parentCategoryId = Array.isArray(values.parentCategoryId) && values.parentCategoryId.length > 0 
                 ? values.parentCategoryId[values.parentCategoryId.length - 1]
                 : null;
@@ -1403,7 +1402,6 @@ const AdminProducts = () => {
                 parentCategoryId: parentCategoryId,
             };
 
-            console.log('Request data:', requestData);
             if (selectedCategoryForEdit) {
                 requestData.categoryId = selectedCategoryForEdit.categoryId;
             }

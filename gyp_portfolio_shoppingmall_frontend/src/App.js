@@ -19,11 +19,11 @@ import CartPage from './pages/CartPage';
 import Layout from './components/Layout';
 import LoginPage from './pages/LoginPage';
 import OrderPage from './pages/OrderPage';
+import OrderInfo from './pages/MyPageOrderInfo';
 import RegisterPage from './pages/RegisterPage';
 import ProductDetail from './pages/ProductDetail';
 import ProductListPage from './pages/ProductListPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
-import OrderManagement from './pages/MyPageOrderManagement';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import UserInfoManagement from './pages/MyPageUserInfoManagement';
 
@@ -66,7 +66,7 @@ function App() {
                       <Route path="cart" element={<CartPage />} />
                       <Route path="order" element={<OrderPage />} />
                       <Route path="order/complete" element={<OrderCompletePage />} />
-                      <Route path="mypage/orders" element={<OrderManagement />} />
+                      <Route path="mypage/orderinfo" element={<OrderInfo />} />
                       <Route path="mypage/userinfo" element={<UserInfoManagement />} />
                     </Route>
                   </Route>
