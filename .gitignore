@@ -4,6 +4,7 @@
 !/screenshots/
 !/.gitignore
 !/README.md
+!/API_GUIDE.md
 
 # === 백엔드 제외 항목 ===
 # 보안 관련
