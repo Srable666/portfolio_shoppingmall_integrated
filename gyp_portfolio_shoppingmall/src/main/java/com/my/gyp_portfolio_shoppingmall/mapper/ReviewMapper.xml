@@ -77,6 +77,15 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="selectReviewList" parameterType="com.my.gyp_portfolio_shoppingmall.dto.ReviewDto$ReviewSearchDTO" resultType="com.my.gyp_portfolio_shoppingmall.dto.ReviewDto$ReviewSearchDTO">
         <include refid="reviewColumn" />
         <where> 
+            <if test="isDeleted != null">
+                AND r.is_deleted = #{isDeleted}
+            </if>            
+            <if test="productItemIds != null and productItemIds.size() > 0">
+                AND r.product_item_id IN
+                <foreach collection="productItemIds" item="productItemId" open="(" separator="," close=")">
+                    #{productItemId}
+                </foreach>
+            </if>
             <choose>
                 <when test="productCode != null">
                     AND p.code LIKE CONCAT('%', #{productCode}, '%')
@@ -87,6 +96,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             </choose>
         </where>
         ORDER BY review_id DESC
+        <if test="size != null and size > 0">
+            LIMIT #{size}
+            <if test="offset != null and offset >= 0">
+                OFFSET #{offset}
+            </if>
+        </if>
     </select>
 
     <!-- 리뷰 삭제 -->

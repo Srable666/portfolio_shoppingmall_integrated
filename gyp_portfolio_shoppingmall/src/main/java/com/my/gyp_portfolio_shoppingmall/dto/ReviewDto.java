@@ -40,5 +40,7 @@ public class ReviewDto {
         private String createdAt;
         private String updatedAt;
         private Integer isDeleted;
+        private Integer offset;
+        private Integer size;
     }
 }
