@@ -1816,16 +1816,13 @@ const AdminProducts = () => {
     useEffect(() => {
         fetchCategories();
         if (location.state?.searchText) {
-            const searchKeyword = location.state.searchText;
-            setSearchText(searchKeyword);
-            setTimeout(() => {
-                fetchProducts(null, searchKeyword);
-            }, 0);
+            setSearchText(location.state.searchText);
+            fetchProducts(null, location.state.searchText);
         } else {
             fetchProducts(null, null);
         }
         setFileList([]);
-    }, [fetchCategories, fetchProducts, location.state, navigate]);
+    }, [location.state, navigate]);
 
     // 카테고리 변경 시 상품 목록 가져오기
     useEffect(() => {
