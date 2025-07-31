@@ -460,6 +460,13 @@ const AdminOrders = () => {
                 endDate: params.endDate || '',
             };
             
+            if (params.dateRange?.[0]) {
+                requestParams.startDate = params.dateRange[0].startOf('day').format('YYYY-MM-DDTHH:mm:ss');
+            }
+            if (params.dateRange?.[1]) {
+                requestParams.endDate = params.dateRange[1].endOf('day').format('YYYY-MM-DDTHH:mm:ss');
+            }
+            
             const response = await authRequest(
                 'get', 
                 '/order/orderListForAdmin', 
@@ -527,20 +534,7 @@ const AdminOrders = () => {
     //#endregion API Functions
 
 
-    //#region Data Management Functions
-    // 현재 검색 조건으로 주문 목록 로드
-    const loadOrderList = useCallback(async (customConditions = null) => {
-        const conditions = customConditions || searchConditions;
-        const params = {
-            merchantUid: conditions.merchantUid,
-            userEmail: conditions.userEmail,
-            startDate: conditions.dateRange?.[0] ? conditions.dateRange[0].format() : '',
-            endDate: conditions.dateRange?.[1] ? conditions.dateRange[1].format() : '',
-        };
-    
-        return fetchOrders(params);
-    }, [fetchOrders]); //무한 루프 방지를 위해 searchConditions 의존성 제거
-    
+    //#region Data Management Functions    
     // 주문 상태 변경 처리
     const handleStatusChange = useCallback(async (record, endpoint, deliveryInfo = null) => {
         try {
@@ -563,7 +557,7 @@ const AdminOrders = () => {
             }
 
             message.success('주문 상태가 변경되었습니다.');
-            await loadOrderList();
+            await fetchOrders(searchConditions);
             
             if (selectedOrder) {
                 const detailResponse = await authRequest('get', '/order/orderDetail', { 
@@ -578,17 +572,18 @@ const AdminOrders = () => {
                 message.warning('네트워크 연결을 확인해주세요.');
             } else if (error.response.status === 409) {
                 message.error('주문 상품 정보가 변경되었습니다. 페이지를 새로고침 해주세요.');
-                await loadOrderList();
+                await fetchOrders(searchConditions);
             } else {
                 message.error(error.response.data || '예기치 못한 오류로 주문 상태 변경에 실패했습니다.');
             }
         }
     }, [
-        authRequest, 
-        loadOrderList, 
-        selectedOrder, 
-        fetchOrderDeliveryHistory, 
         message,
+        authRequest, 
+        selectedOrder, 
+        searchConditions,
+        fetchOrders, 
+        fetchOrderDeliveryHistory, 
     ]);
     //#endregion Data Management Functions
     
@@ -602,16 +597,8 @@ const AdminOrders = () => {
             dateRange
         };
         
-        setSearchConditions(conditions);
-
-        const params = {
-            merchantUid: conditions.merchantUid,
-            userEmail: conditions.userEmail,
-            startDate: conditions.dateRange?.[0] ? conditions.dateRange[0].format() : '',
-            endDate: conditions.dateRange?.[1] ? conditions.dateRange[1].format() : '',
-        };
-        
-        fetchOrders(params);
+        setSearchConditions(conditions);        
+        fetchOrders(conditions);
     }
 
     // 주문 번호 클릭 핸들러
@@ -980,16 +967,6 @@ const AdminOrders = () => {
         };
         
         fetchOrders(defaultParams);
-        
-        // searchConditions 초기화
-        setSearchConditions({
-            merchantUid: '',
-            userEmail: '',
-            dateRange: null,
-        });
-        setDateRange(null);
-        setSearchKeyword('');
-        setSearchType('merchantUid');
     }, []); // 빈 의존성 배열로 마운트 시에만 실행
 
     // 배송 모달 폼 초기화

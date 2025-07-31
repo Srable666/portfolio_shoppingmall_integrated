@@ -118,10 +118,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                 AND payment_method = #{paymentMethod}
             </if>
             <if test="startDate != null">
-                AND created_at &gt;= #{startDate}
+                AND requested_at &gt;= #{startDate}
             </if>
             <if test="endDate != null">
-                AND created_at &lt;= #{endDate}
+                AND requested_at &lt;= #{endDate}
             </if>
         </where>
         ORDER BY created_at DESC

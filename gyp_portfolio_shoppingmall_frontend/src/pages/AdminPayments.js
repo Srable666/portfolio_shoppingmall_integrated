@@ -192,15 +192,26 @@ const AdminPayments = () => {
     
     //#region API Functions
     // 결제 목록 조회
-    const fetchPayments = useCallback(async (customConditions) => {
+    const fetchPayments = useCallback(async (params) => {
         if (!user) return;
         
         try {
             setLoading(true);
 
             const requestParams = { 
-                ...customConditions
+                impUid: params.impUid || '',
+                merchantUid: params.merchantUid || '',
+                customerEmail: params.customerEmail || '',
+                startDate: params.startDate || '',
+                endDate: params.endDate || '',
             };
+    
+            if (params.dateRange?.[0]) {
+                requestParams.startDate = params.dateRange[0].startOf('day').format('YYYY-MM-DDTHH:mm:ss');
+            }
+            if (params.dateRange?.[1]) {
+                requestParams.endDate = params.dateRange[1].endOf('day').format('YYYY-MM-DDTHH:mm:ss');
+            }
 
             const response = await authRequest('get', '/payment/historyListForAdmin', requestParams);
             const paymentData = response.data || [];
@@ -227,8 +238,7 @@ const AdminPayments = () => {
     // 검색 처리
     const handleSearch = () => {
         const searchConditions = {
-            startDate: dateRange?.[0] ? dateRange[0].format() : '',
-            endDate: dateRange?.[1] ? dateRange[1].format() : '',
+            dateRange,
         };
 
         if (searchKeyword) {
