@@ -529,19 +529,17 @@ const AdminOrders = () => {
 
     //#region Data Management Functions
     // 현재 검색 조건으로 주문 목록 로드
-    const loadOrderList = useCallback(async () => {
+    const loadOrderList = useCallback(async (customConditions = null) => {
+        const conditions = customConditions || searchConditions;
         const params = {
-            merchantUid: searchConditions.merchantUid,
-            userEmail: searchConditions.userEmail,
-            startDate: searchConditions.dateRange?.[0] ? searchConditions.dateRange[0].format() : '',
-            endDate: searchConditions.dateRange?.[1] ? searchConditions.dateRange[1].format() : '',
+            merchantUid: conditions.merchantUid,
+            userEmail: conditions.userEmail,
+            startDate: conditions.dateRange?.[0] ? conditions.dateRange[0].format() : '',
+            endDate: conditions.dateRange?.[1] ? conditions.dateRange[1].format() : '',
         };
-
+    
         return fetchOrders(params);
-    }, [
-        fetchOrders, 
-        searchConditions, 
-    ]);
+    }, [fetchOrders]); //무한 루프 방지를 위해 searchConditions 의존성 제거
     
     // 주문 상태 변경 처리
     const handleStatusChange = useCallback(async (record, endpoint, deliveryInfo = null) => {
@@ -993,11 +991,6 @@ const AdminOrders = () => {
         setSearchKeyword('');
         setSearchType('merchantUid');
     }, []); // 빈 의존성 배열로 마운트 시에만 실행
-
-    // 주문 목록 로딩
-    useEffect(() => {
-        loadOrderList();
-    }, [loadOrderList]);
 
     // 배송 모달 폼 초기화
     useEffect(() => {
