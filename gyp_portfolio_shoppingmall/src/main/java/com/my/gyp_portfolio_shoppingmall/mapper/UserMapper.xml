@@ -133,7 +133,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </select>
     
     <!-- 회원 목록 조회 -->
-    <select id="getUserList" resultType="User" parameterType="com.my.gyp_portfolio_shoppingmall.dto.UserDto$UserListDTO">
+    <select id="getUserList" resultType="User" parameterType="com.my.gyp_portfolio_shoppingmall.dto.UserDto$UserListDTO" useCache="false" flushCache="true">
         SELECT
             user_id as userId,
             email,

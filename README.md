@@ -266,6 +266,12 @@ PORTONE_API_BASE_URL=https://api.portone.io
 PHONE_ENCRYPTION_KEY=your_32_character_encryption_key
 PHONE_ENCRYPTION_SALT=your_16_character_salt
 
+# MyBatis 캐시 설정(캐시 비활성화)
+mybatis.configuration.local-cache-scope=STATEMENT
+mybatis.configuration.cache-enabled=false
+mybatis.configuration.lazy-loading-enabled=false
+mybatis.configuration.aggressive-lazy-loading=false
+
 # 도메인 설정
 APP_DOMAIN=http://localhost:3000/shopping-mall
 ```

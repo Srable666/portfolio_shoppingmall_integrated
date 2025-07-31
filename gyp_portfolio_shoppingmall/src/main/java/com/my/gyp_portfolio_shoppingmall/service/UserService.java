@@ -475,6 +475,7 @@ public class UserService {
     }
 
     // 회원 목록 조회
+    @Transactional(readOnly = true)
     public List<User> getUserList(UserListDTO userListDTO) {
         List<User> users = userDao.getUserList(userListDTO);
         
@@ -506,6 +507,7 @@ public class UserService {
     }
 
     // 로그인 기록 조회
+    @Transactional(readOnly = true)
     public List<LoginHistory> getLoginHistory(Integer userId) {
         return userDao.getLoginHistory(userId);
     }
