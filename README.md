@@ -9,7 +9,7 @@
 
 ### 라이브 데모
 - **데모 사이트**: 🔗 **[https://gyp-myportfolio.com/shopping-mall](https://gyp-myportfolio.com/shopping-mall)**
-  - 💬 **체험 안내**: 본 데모 사이트는 회원가입을 통해 자유롭게 회원 계정을 만들 수 있습니다. 아직 개발 중인 포트원 결제 기능을 제외한 나머지 기능(회원가입, 로그인, 정보변경, 장바구니 담기 등)을 테스트해보실 수 있습니다.
+  - 💬 **체험 안내**: 본 데모 사이트는 회원가입을 통해 자유롭게 회원 계정을 만들 수 있습니다. 테스트 계정은 test1@test.com, test2@test.com, test3@test.com이 있으며, 비밀번호는 'testTEST1!' 입니다. 아직 개발 중인 포트원 결제 기능을 제외한 나머지 기능(회원가입, 로그인, 정보변경, 장바구니 담기 등)을 테스트해보실 수 있습니다.
 - **관리자 페이지**: 🔗 **[https://gyp-myportfolio.com/shopping-mall/admin/login](https://gyp-myportfolio.com/shopping-mall/admin/login)**
   - 💬 **관리자 기능 체험 안내**: 본 데모 사이트의 관리자 기능을 테스트해보실 수 있습니다. 단, 아직 미완성된 기능(주문관리 페이지의 주문 상태별 작업 기능)은 테스트가 불가능합니다. 보안을 위해 공용 관리자 계정은 공개되어 있지 않으니, 필요하신 경우에는 **연락처 항목의 이메일**로 연락해주시기 바랍니다.
 - *호스팅: AWS Lightsail*
