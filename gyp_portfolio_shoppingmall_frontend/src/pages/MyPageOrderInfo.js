@@ -489,6 +489,8 @@ const OrderInfo = () => {
             setError(null);
 
             const response = await authRequest('get', '/order/orderList');
+
+            console.log('response', response);
             
             setOrders(response.data);
         } catch (error) {
@@ -634,7 +636,7 @@ const OrderInfo = () => {
 
             const response = await authRequest('post', '/order/updateOrderProductRequest', {
                 orderProductId: selectedOrderProduct.orderProductId,
-                orderId: selectedOrderDetail.orderId,
+                orderId: selectedOrderProduct.orderId,
                 status: status,
                 requestReason: reasonText,
                 requestQuantity: values.quantity,
@@ -644,7 +646,7 @@ const OrderInfo = () => {
             message.success(response.data);
             setRequestModalVisible(false);
             requestForm.resetFields();
-            await fetchOrderDetail(selectedOrderDetail.orderId);
+            await fetchOrders();
         } catch (error) {
             console.error('주문 취소/반품/교환 요청 에러:', error);
         
@@ -659,8 +661,7 @@ const OrderInfo = () => {
     }, [
         authRequest, 
         message, 
-        selectedOrderDetail, 
-        fetchOrderDetail, 
+        fetchOrders, 
         selectedOrderProduct, 
         requestForm,
         requestType,
@@ -1157,7 +1158,10 @@ const OrderInfo = () => {
                                             size="small"
                                             danger
                                             block
-                                            onClick={() => onRequestAction('cancel', orderProduct)}
+                                            onClick={() => onRequestAction('cancel', {
+                                                ...orderProduct,
+                                                orderId: orderMaster.orderId
+                                            })}
                                         >
                                             주문취소
                                         </OrderCardProductItemButton>
@@ -1178,7 +1182,10 @@ const OrderInfo = () => {
                                             <OrderCardProductItemButton
                                                 size="small"
                                                 block
-                                                onClick={() => onRequestAction('exchange', orderProduct)}
+                                                onClick={() => onRequestAction('exchange', {
+                                                    ...orderProduct,
+                                                    orderId: orderMaster.orderId
+                                                })}
                                             >
                                                 교환신청
                                             </OrderCardProductItemButton>
@@ -1186,7 +1193,10 @@ const OrderInfo = () => {
                                             <OrderCardProductItemButton
                                                 size="small"
                                                 block
-                                                onClick={() => onRequestAction('return', orderProduct)}
+                                                onClick={() => onRequestAction('return', {
+                                                    ...orderProduct,
+                                                    orderId: orderMaster.orderId
+                                                })}
                                             >
                                                 반품신청
                                             </OrderCardProductItemButton>
@@ -1384,7 +1394,10 @@ const OrderInfo = () => {
                     onConfirmDelivery={handleConfirmDelivery}
                     onRequestAction={(type, orderProduct) => {
                         setRequestType(type);
-                        setSelectedOrderProduct(orderProduct);
+                        setSelectedOrderProduct({
+                            ...orderProduct,
+                            orderId: record.orderId
+                        });
                         setRequestModalVisible(true);
                     }}
                     onReviewAction={(type, orderProduct) => {
@@ -1538,7 +1551,10 @@ const OrderInfo = () => {
                                     onConfirmDelivery={handleConfirmDelivery}
                                     onRequestAction={(type, orderProduct) => {
                                         setRequestType(type);
-                                        setSelectedOrderProduct(orderProduct);
+                                        setSelectedOrderProduct({
+                                            ...orderProduct,
+                                            orderId: order.orderId
+                                        });
                                         setRequestModalVisible(true);
                                     }}
                                     onReviewAction={(type, orderProduct) => {

@@ -536,23 +536,24 @@ const AdminOrders = () => {
 
     //#region Data Management Functions    
     // 주문 상태 변경 처리
-    const handleStatusChange = useCallback(async (record, endpoint, deliveryInfo = null) => {
+    const handleStatusChange = useCallback(async (orderProduct, endpoint, deliveryInfo = null) => {
         try {
+
             // 배송 정보가 필요한 경우(deliveryInfoDTO 타입)
             if (deliveryInfo) {
                 await authRequest('post', `/order${endpoint}`, {
                     ...deliveryInfo,
-                    orderProductId: record.product.orderProductId,
-                    version: record.product.version
+                    orderProductId: orderProduct.orderProductId,
+                    version: orderProduct.version
                 });
             } 
             // 배송 정보가 필요없는 경우(OrderProductDTO 타입)
             else {
                 await authRequest('post', `/order${endpoint}`, {
-                    orderProductId: record.product.orderProductId,
-                    orderId: record.orderId,
-                    status: record.product.status,
-                    version: record.product.version
+                    orderProductId: orderProduct.orderProductId,
+                    orderId: orderProduct.orderId,
+                    status: orderProduct.status,
+                    version: orderProduct.version
                 });
             }
 
@@ -712,10 +713,16 @@ const AdminOrders = () => {
                             style={{ cursor: 'pointer' }}
                             onClick={() => {
                                 if (nextAction.needsDeliveryInfo) {
-                                    setSelectedOrderProduct(product);
+                                    setSelectedOrderProduct({
+                                        ...product,
+                                        orderId: record.orderId
+                                    });
                                     setDeliveryModalVisible(true);
                                 } else {
-                                    handleStatusChange(product, nextAction.endpoint);
+                                    handleStatusChange({
+                                        ...product,
+                                        orderId: record.orderId
+                                    }, nextAction.endpoint);
                                 }
                             }}
                         >
@@ -802,7 +809,7 @@ const AdminOrders = () => {
     // 주문 목록 테이블 컬럼
     const columns = useMemo(() => [
         {
-            title: '주문 일자',
+            title: '주문일자',
             dataIndex: 'createdAt',
             key: 'createdAt',
             align: 'center',
@@ -810,7 +817,7 @@ const AdminOrders = () => {
             render: (date) => formatDate(date).split('오전').shift().split('오후').shift().trim(),
         },
         {
-            title: '주문 번호',
+            title: '주문번호',
             dataIndex: 'merchantUid',
             key: 'merchantUid',
             align: 'center',
@@ -826,7 +833,14 @@ const AdminOrders = () => {
             ),
         },
         {
-            title: '주문 이메일',
+            title: '주문가격',
+            dataIndex: 'totalPrice',
+            key: 'totalPrice',
+            align: 'center',
+            render: (_, record) => `₩${Number(record.product.finalPrice * record.product.originalQuantity).toLocaleString()}`
+        },
+        {
+            title: '주문이메일',
             dataIndex: 'email',
             key: 'email',
             align: 'center',
@@ -841,13 +855,13 @@ const AdminOrders = () => {
             ),
         },
         {
-            title: '주문 상품',
+            title: '주문상품',
             key: 'products',
             align: 'center',
             render: handleOrderProductRender
         },
         {
-            title: '주문 상태',
+            title: '주문상태',
             key: 'status',
             align: 'center',
             render: handleOrderStatusRender,

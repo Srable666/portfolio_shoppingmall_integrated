@@ -57,6 +57,10 @@ public class OrderService {
     // 상태 업데이트만 수행하는 낙관적 잠금 전용 메서드
     @OptimisticLock
     public int updateOrderProductStatusWithOptimisticLock(OrderProduct orderProduct) {
+        if (orderProduct.getVersion() == null) {
+            throw new OrderException.OrderProductRequestException();
+        }
+        
         return orderDao.updateOrderProductStatusWithOptimisticLock(orderProduct);
     }
 
@@ -586,9 +590,9 @@ public class OrderService {
             orderCheck.getUserId()
         );
 
-        // DTO 상태가 취소 요청이면 orderProductCheck 상태가 결제 대기, 준비중일 경우에만 통과
+        // DTO 상태가 취소 요청이면 orderProductCheck 상태가 결제 대기, 결제 완료, 준비중일 경우에만 통과
         if (orderProductDTO.getStatus() == OrderProductStatus.CANCEL_REQUESTED) {
-            if (orderProductCheck.getStatus() != OrderProductStatus.PAYMENT_PENDING && orderProductCheck.getStatus() != OrderProductStatus.PREPARING) {
+            if (orderProductCheck.getStatus() != OrderProductStatus.PAYMENT_PENDING && orderProductCheck.getStatus() != OrderProductStatus.PAYMENT_COMPLETED && orderProductCheck.getStatus() != OrderProductStatus.PREPARING) {
                 throw new OrderException.OrderProductRequestException();
             }
         }
@@ -618,12 +622,7 @@ public class OrderService {
         orderDao.insertOrderProductHistory(orderProductHistory);
 
         // orderProduct 상태 업데이트(낙관적 잠금)
-        if (orderProductDTO.getStatus() == OrderProductStatus.EXCHANGE_REQUESTED) {
-            orderProductCheck.setRequestQuantity(orderProductDTO.getRequestQuantity());
-        } else {
-            orderProductCheck.setChangedQuantity(orderProductCheck.getOriginalQuantity() - orderProductDTO.getRequestQuantity());
-            orderProductCheck.setRequestQuantity(orderProductDTO.getRequestQuantity());
-        }
+        orderProductCheck.setRequestQuantity(orderProductDTO.getRequestQuantity());
         orderProductCheck.setStatus(orderProductDTO.getStatus());
         orderProductCheck.setRequestReason(orderProductDTO.getRequestReason());
         orderProductCheck.setVersion(orderProductDTO.getVersion());
@@ -655,13 +654,9 @@ public class OrderService {
 
         // orderProduct 상태 업데이트(낙관적 잠금, 취소 요청 -> 취소 완료)
         orderProductCheck.setStatus(OrderProductStatus.CANCELED);
+        orderProductCheck.setChangedQuantity(orderProductCheck.getOriginalQuantity() - orderProductCheck.getRequestQuantity());
         orderProductCheck.setVersion(cancelOrderProductDTO.getVersion());
         updateOrderProductStatusWithOptimisticLock(orderProductCheck);
-
-        // 배송이력 업데이트(배송중 -> 취소)
-        DeliveryHistory deliveryHistory = orderDao.selectLatestDeliveredDeliveryHistory(orderProductCheck.getOrderProductId());
-        deliveryHistory.setDeliveryStatus(DeliveryStatus.CANCELED);
-        orderDao.updateDeliveryHistory(deliveryHistory);
 
         // 주문한 상품 이력 정보 생성
         OrderProductHistory orderProductHistory = new OrderProductHistory();
@@ -671,7 +666,7 @@ public class OrderService {
         orderProductHistory.setReason("주문 취소 완료");
         orderDao.insertOrderProductHistory(orderProductHistory);
 
-        // orders 업데이트
+        // orders 금액 업데이트(취소되는 금액만큼 차감된 주문 총 금액 계산)
         Order currentOrder = orderDao.getOrderInfo(orderProductCheck.getOrderId());
         // 취소되는 금액만큼 차감된 주문 총 금액 계산
         BigDecimal changedTotalPrice = currentOrder.getCurrentTotalPrice().subtract(orderProductCheck.getFinalPrice().multiply(BigDecimal.valueOf(orderProductCheck.getRequestQuantity())));
@@ -686,6 +681,8 @@ public class OrderService {
         }
         currentOrder.setCurrentTotalPrice(changedTotalPrice);
         orderDao.updateOrder(currentOrder);
+
+        // 결제완료 이후 취소요청인 경우, 포트원 결제 취소 처리(로직 추가 필요)
     }
 
     // 관리자의 주문 반품 요청 승인(반품 요청 -> 반품 중)
@@ -795,6 +792,7 @@ public class OrderService {
         
         // orderProduct 상태 업데이트(낙관적 잠금, 반품 중 -> 반품 완료)
         orderProductCheck.setStatus(OrderProductStatus.RETURNED);
+        orderProductCheck.setChangedQuantity(orderProductCheck.getOriginalQuantity() - orderProductCheck.getRequestQuantity());
         orderProductCheck.setVersion(returnDeliveryInfoDTO.getVersion());
         updateOrderProductStatusWithOptimisticLock(orderProductCheck);
 
@@ -807,7 +805,7 @@ public class OrderService {
         newOrderProductHistory.setReason("반품 완료");
         orderDao.insertOrderProductHistory(newOrderProductHistory);
 
-        // 주문 마스터 업데이트
+        // order 총 금액 업데이트(반품되는 금액만큼 차감된 주문 총 금액 계산)
         Order currentOrder = orderDao.getOrderInfo(orderProductCheck.getOrderId());
         // 반품되는 금액만큼 차감된 주문 총 금액 계산
         BigDecimal changedTotalPrice = currentOrder.getCurrentTotalPrice().subtract(orderProductCheck.getFinalPrice().multiply(BigDecimal.valueOf(orderProductCheck.getRequestQuantity())));

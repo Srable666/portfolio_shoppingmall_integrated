@@ -629,13 +629,16 @@ const AppLayout = () => {
 
     // 검색 이벤트 처리
     const handleSearch = (value) => {
-        if (value.trim()) {
-            setCurrentCategory(null);
-            setCategoryPath([]);
-            setSubCategories([]);
-
-            navigate(`/products?q=${encodeURIComponent(value)}`);
+        const searchValue = (value ?? '').trim();
+        if (!searchValue) {
+            message.warning('검색어를 입력 후 검색해주세요.');
+            return;
         }
+        setCurrentCategory(null);
+        setCategoryPath([]);
+        setSubCategories([]);
+
+        navigate(`/products?q=${encodeURIComponent(value)}`);
     };
 
     // 로그아웃 처리
@@ -1023,16 +1026,7 @@ const AppLayout = () => {
                         size="middle"
                         style={{ width: '100%' }}
                         aria-label="상품 검색"
-                        enterButton={
-                            <Tooltip 
-                                title={!searchValue.trim() ? "⚠️검색어를 입력 후 검색해주세요." : ""}
-                                trigger="click"
-                                open={!searchValue.trim() ? undefined : false}
-                                color="#ff4d4f"
-                            >
-                                <Button type="primary">검색</Button>
-                            </Tooltip>
-                        }
+                        enterButton="검색"
                     />
                 </MobileSearchContainer>
 
