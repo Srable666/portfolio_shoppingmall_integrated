@@ -99,6 +99,17 @@ const ProductImage = styled.img`
     object-fit: cover;
     border-radius: 4px;
 `;
+
+// 상품 이름
+const ProductName = styled.div`
+    cursor: pointer;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-height: 1.4;
+`;
+
 //#endregion Styled Components
 
 
@@ -260,8 +271,8 @@ const CartPage = () => {
     //#region Renderers
     // 상품 정보 렌더러
     const ProductInfoRenderer = ({ name, record, onProductClick }) => (
-        <Row gutter={16} align="middle">
-            <Col>
+        <Row gutter={16} align="middle" wrap={false}>
+            <Col flex="none">
                 <ProductImage   
                     src={getImageUrl(record.imageUrl)}
                     alt={name}
@@ -272,13 +283,12 @@ const CartPage = () => {
                     }}
                 />
             </Col>
-            <Col>
-                <div 
+            <Col flex="auto" style={{ minWidth: 0 }}>
+                <ProductName 
                     onClick={() => onProductClick(record)} 
-                    style={{ cursor: 'pointer' }}
                 >
                     <Text strong>{name}</Text>
-                </div>
+                </ProductName>
                 <div>
                     <Text type="secondary">사이즈: {record.size}</Text>
                 </div>
@@ -439,11 +449,16 @@ const CartPage = () => {
                             <div className="total-row">
                                 <ShippingInfoContainer>
                                     <Text>배송비</Text>
-                                    {shippingFee > 0 && (
-                                        <Tooltip title={`￦${FREE_SHIPPING_THRESHOLD.toLocaleString()} 이상 구매 시 무료배송`}>
-                                            <QuestionCircleOutlined style={{ color: '#8c8c8c', cursor: 'pointer' }} />
-                                        </Tooltip>
-                                    )}
+                                    <Tooltip title={`￦${FREE_SHIPPING_THRESHOLD.toLocaleString()} 이상 구매 시 무료배송`}>
+                                        <QuestionCircleOutlined 
+                                            style={{ 
+                                                fontSize: '14px',
+                                                color: '#8c8c8c', 
+                                                cursor: 'pointer', 
+                                                marginLeft: '4px', 
+                                            }} 
+                                        />
+                                    </Tooltip>
                                 </ShippingInfoContainer>
                                 <Text strong>￦{shippingFee.toLocaleString()}</Text>
                                 

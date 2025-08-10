@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useContext, useEffect } from 'react';
 import { useResponsive } from '../contexts/ResponsiveContext';
+import { QuestionCircleOutlined } from '@ant-design/icons';
 import { usePayment } from '../contexts/PaymentContext';
 import { AuthContext } from '../contexts/AuthContext';
 import { getImageUrl } from '../utils/imageUtils';
@@ -7,8 +8,9 @@ import { useCart } from '../contexts/CartContext';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import {
-    Form, Input, Button, Table, Space,
-    Row, Col, Divider, Typography, App,
+    Form, Input, Button, Table,
+    Row, Col, Divider, Typography,
+    Spin, App, Card, Tooltip,
 } from 'antd';
 
 const { Text } = Typography;
@@ -56,12 +58,41 @@ const OrderSection = styled.div`
     }
 `;
 
+// 상품 정보 칼럼 스타일
+const ProductColumn = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+`;
+
 // 상품 이미지 스타일
 const ProductImage = styled.img`
     width: 80px;
     height: 96px;
     object-fit: cover;
     border-radius: 4px;
+`;
+
+// 상품 정보 칼럼 스타일
+const ProductInfo = styled.div`
+    flex: 1;
+    min-width: 0;
+    text-align: left;
+`;
+
+// 상품 이름 스타일
+const ProductName = styled.div`
+    font-weight: bold;
+    margin-bottom: 4px;
+    word-break: break-word;
+    line-height: 1.4;
+`;
+
+// 상품 옵션 스타일
+const ProductOption = styled.div`
+    color: #8c8c8c;
+    font-size: 14px;
 `;
 
 // 주소 검색 스타일
@@ -80,6 +111,31 @@ const AddressTopLine = styled.div`
     display: flex;
     gap: 3px;
 `;
+
+// 모바일 주문 상품 카드 스타일
+const MobileOrderCard = styled(Card)`
+    margin-bottom: 12px;
+    
+    .card-header {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+    
+    .card-info {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .card-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid #f0f0f0;
+    }
+`;
 //#endregion Styled Components
 
 
@@ -97,6 +153,9 @@ const OrderPage = () => {
 
     const [form] = Form.useForm();
     const [isOrdering, setIsOrdering] = useState(false);
+    const [userLoading, setUserLoading] = useState(false);
+    
+    const FREE_SHIPPING_THRESHOLD = 50000;
     //#endregion Hooks & States
     
     
@@ -133,11 +192,13 @@ const OrderPage = () => {
 
     // 사용자 상세 정보 조회
     const fetchUserDetails = useCallback(async () => {
+        setUserLoading(true);
+        
         try {
             const response = await authRequest('get', '/user/find', {
                 email: user?.email
             });
-         
+        
             // 배송 정보 폼에 사용자 정보 자동 입력
             form.setFieldsValue({
                 recipientName: response.data.name,
@@ -154,6 +215,8 @@ const OrderPage = () => {
             } else {
                 message.error(error.response.data || '예기치 못한 오류로 회원 정보 조회에 실패했습니다.');
             }
+        } finally {
+            setUserLoading(false);
         }
     }, [authRequest, user, form, message]);
     //#endregion API Functions
@@ -288,23 +351,26 @@ const OrderPage = () => {
     // 주문 상품 테이블 컬럼 정의
     const orderProductColumns = [
         {
-            title: '상품정보',
+            title: '상품',
             dataIndex: 'name',
             key: 'name',
             align: 'center',
             render: (text, record) => (
-                <Space>
+                <ProductColumn>
                     <ProductImage 
                         src={getImageUrl(record.imageUrl)} 
-                        alt={record.name}  
+                        alt={record.name}
+                        style={{ flexShrink: 0 }}
                     />
-                    <Space direction="vertical" size={0}>
-                        <Text strong>{text}</Text>
-                        <Text type="secondary">
+                    <ProductInfo>
+                        <ProductName>
+                            {text}
+                        </ProductName>
+                        <ProductOption>
                             {record.size} / {record.color}
-                        </Text>
-                    </Space>
-                </Space>
+                        </ProductOption>
+                    </ProductInfo>
+                </ProductColumn>
             ),
         },
         {
@@ -335,106 +401,140 @@ const OrderPage = () => {
 
 
     //#region Render Functions
+    // 모바일 주문 상품 렌더링
+    const renderMobileOrderItems = () => (
+        <div>
+            {cartItems.map(item => (
+                <MobileOrderCard key={item.productItemId} size="small">
+                    <div className="card-header">
+                        <ProductImage 
+                            src={getImageUrl(item.imageUrl)} 
+                            alt={item.name}
+                            style={{ flexShrink: 0 }}
+                        />
+                        <div className="card-info">
+                            <ProductName>
+                                {item.name}
+                            </ProductName>
+                            <ProductOption>
+                                {item.size} / {item.color}
+                            </ProductOption>
+                        </div>
+                    </div>
+                    <div className="card-footer">
+                        <Text>수량: {item.quantity}개</Text>
+                        <Text strong>￦{(item.price * item.quantity).toLocaleString()}</Text>
+                    </div>
+                </MobileOrderCard>
+            ))}
+        </div>
+    );
+
     return (
         <OrderContainer>
             <PageTitle level={3}>주문/결제</PageTitle>
 
             {/* 1. 주문 상품 정보 섹션 */}
             <OrderSection>
-                <Title level={3}>주문 상품</Title>
-                <Table 
-                    columns={orderProductColumns} 
-                    dataSource={cartItems}
-                    pagination={false}
-                    rowKey="productItemId"
-                    size={isMobile ? "small" : "middle"}
-                    scroll={{ x: isMobile ? 'max-content' : false }}
-                />
+                <Title level={3}>주문상품</Title>
+                {isMobile ? (
+                    renderMobileOrderItems()
+                ) : (
+                    <Table 
+                        columns={orderProductColumns} 
+                        dataSource={cartItems}
+                        pagination={false}
+                        rowKey="productItemId"
+                        size="middle"
+                    />
+                )}
             </OrderSection>
 
             {/* 2. 배송 정보 입력 섹션 */}
-            <OrderSection>
-                <Title level={3}>배송 정보</Title>
-                <Form form={form} layout="vertical">
-                    <Form.Item 
-                        label="받는 사람" 
-                        name="recipientName"
-                        style={{ marginBottom: 10 }}
-                        rules={[{ required: true, message: '받는 사람을 입력해주세요' }]}
-                    >
-                        <Input />
-                    </Form.Item>
-                    <Form.Item 
-                        label="연락처" 
-                        name="recipientPhone"
-                        style={{ marginBottom: 10 }}
-                        rules={[{ required: true, message: '연락처를 입력해주세요' }]}
-                    >
-                        <Input />
-                    </Form.Item>
+            <Spin spinning={userLoading} tip="배송 정보를 불러오는 중...">
+                <OrderSection>
+                    <Title level={3}>배송정보</Title>
+                    <Form form={form} layout="vertical">
+                        <Form.Item 
+                            label="받는 사람" 
+                            name="recipientName"
+                            style={{ marginBottom: 10 }}
+                            rules={[{ required: true, message: '받는 사람을 입력해주세요' }]}
+                        >
+                            <Input />
+                        </Form.Item>
+                        <Form.Item 
+                            label="연락처" 
+                            name="recipientPhone"
+                            style={{ marginBottom: 10 }}
+                            rules={[{ required: true, message: '연락처를 입력해주세요' }]}
+                        >
+                            <Input />
+                        </Form.Item>
 
-                    <AddressContainer>
-                        <AddressTopLine>
+                        <AddressContainer>
+                            <AddressTopLine>
+                                <Form.Item
+                                    name="recipientPostcode"
+                                    label="배송주소"
+                                    rules={[{ required: true, message: '우편번호를 입력해주세요' }]}
+                                    style={{ marginBottom: 3, flex: 1 }}
+                                >
+                                    <Input
+                                        readOnly
+                                        onClick={handleAddressSearch}
+                                        style={{ cursor: 'pointer' }}
+                                        placeholder="우편번호"
+                                    />
+                                </Form.Item>
+                                <Form.Item style={{ marginBottom: 3, alignSelf: 'flex-end' }}>
+                                    <Button onClick={handleAddressSearch}>
+                                        주소 검색
+                                    </Button>
+                                </Form.Item>
+                            </AddressTopLine>
+
                             <Form.Item
-                                name="recipientPostcode"
-                                label="배송주소"
-                                rules={[{ required: true, message: '우편번호를 입력해주세요' }]}
-                                style={{ marginBottom: 3, flex: 1 }}
+                                name="recipientAddress"
+                                rules={[{ required: true, message: '주소를 입력해주세요' }]}
+                                style={{ marginBottom: '3px' }}
                             >
                                 <Input
                                     readOnly
                                     onClick={handleAddressSearch}
                                     style={{ cursor: 'pointer' }}
-                                    placeholder="우편번호"
+                                    placeholder="기본주소"
                                 />
                             </Form.Item>
-                            <Form.Item style={{ marginBottom: 3, alignSelf: 'flex-end' }}>
-                                <Button onClick={handleAddressSearch}>
-                                    주소 검색
-                                </Button>
+
+                            <Form.Item
+                                name="recipientAddressDetail"
+                            style={{ marginBottom: 10 }}
+                                rules={[
+                                    { required: true, message: '상세주소를 입력해주세요' },
+                                    { whitespace: true, message: '공백만으로는 상세주소를 입력할 수 없습니다' }
+                                ]}
+                            >
+                                <Input placeholder="상세주소 (직접 입력)" />
                             </Form.Item>
-                        </AddressTopLine>
-
-                        <Form.Item
-                            name="recipientAddress"
-                            rules={[{ required: true, message: '주소를 입력해주세요' }]}
-                            style={{ marginBottom: '3px' }}
+                        </AddressContainer>
+                        <Form.Item 
+                            label="배송 요청사항" 
+                            name="deliveryRequest"
+                            style={{ marginBottom: 10 }}
                         >
-                            <Input
-                                readOnly
-                                onClick={handleAddressSearch}
-                                style={{ cursor: 'pointer' }}
-                                placeholder="기본주소"
-                            />
+                            <Input.TextArea placeholder="배송 시 요청사항을 입력해주세요" />
                         </Form.Item>
-
-                        <Form.Item
-                            name="recipientAddressDetail"
-                        style={{ marginBottom: 10 }}
-                            rules={[
-                                { required: true, message: '상세주소를 입력해주세요' },
-                                { whitespace: true, message: '공백만으로는 상세주소를 입력할 수 없습니다' }
-                            ]}
-                        >
-                            <Input placeholder="상세주소 (직접 입력)" />
-                        </Form.Item>
-                    </AddressContainer>
-                    <Form.Item 
-                        label="배송 요청사항" 
-                        name="deliveryRequest"
-                        style={{ marginBottom: 10 }}
-                    >
-                        <Input.TextArea placeholder="배송 시 요청사항을 입력해주세요" />
-                    </Form.Item>
-                </Form>
-            </OrderSection>
+                    </Form>
+                </OrderSection>
+            </Spin>
 
             {/* 3. 결제 정보 섹션 */}
             <OrderSection>
-                <Title level={3}>결제 정보</Title>
+                <Title level={3}>결제정보</Title>
                 <Row justify="space-between" style={{ marginBottom: '12px' }}>
                     <Col>
-                        <Text>상품 금액</Text>
+                        <Text>상품금액</Text>
                     </Col>
                     <Col>
                         <Text>￦{totalPrice.toLocaleString()}</Text>
@@ -443,6 +543,16 @@ const OrderPage = () => {
                 <Row justify="space-between" style={{ marginBottom: '12px' }}>
                     <Col>
                         <Text>배송비</Text>
+                        <Tooltip title={`￦${FREE_SHIPPING_THRESHOLD.toLocaleString()} 이상 구매 시 무료배송`}>
+                            <QuestionCircleOutlined
+                                style={{ 
+                                    fontSize: '14px',
+                                    color: '#8c8c8c', 
+                                    cursor: 'pointer', 
+                                    marginLeft: '4px', 
+                                }} 
+                            />
+                        </Tooltip>
                     </Col>
                     <Col>
                         <Text>￦{shippingFee.toLocaleString()}</Text>
@@ -451,7 +561,7 @@ const OrderPage = () => {
                 <Divider />
                 <Row justify="space-between">
                     <Col>
-                        <Text strong>최종 결제 금액</Text>
+                        <Text strong>최종 결제금액</Text>
                     </Col>
                     <Col>
                         <Text strong style={{ color: '#ff4d4f', fontSize: '18px' }}>
