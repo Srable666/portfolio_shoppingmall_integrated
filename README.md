@@ -19,7 +19,7 @@
 ### 스크린샷
 
 #### 🖥️ 데스크톱 버전
-| 홈페이지 | 상품 목록 |
+| **홈페이지** | **상품 목록** |
 |:---:|:---:|
 | [![홈페이지](./screenshots/01_homepage_desktop.png)](./screenshots/01_homepage_desktop.png) | [![상품 목록](./screenshots/02_product_list_desktop.png)](./screenshots/02_product_list_desktop.png) |
 | **상품 상세** | **장바구니** |
@@ -28,14 +28,14 @@
 | [![주문 내역](./screenshots/05_order_info_desktop.png)](./screenshots/05_order_info_desktop.png) | |
 
 #### 🔧 관리자 페이지
-| 대시보드 | 상품 관리 |
+| **대시보드** | **상품 관리** |
 |:---:|:---:|
 | [![관리자 대시보드](./screenshots/06_admin_dashboard_desktop.png)](./screenshots/06_admin_dashboard_desktop.png) | [![상품 관리](./screenshots/07_admin_product_management_desktop.png)](./screenshots/07_admin_product_management_desktop.png) |
 | **주문 관리** | |
 | [![주문 관리](./screenshots/08_admin_order_management_desktop.png)](./screenshots/08_admin_order_management_desktop.png) | |
 
 #### 📱 모바일 반응형
-| 홈페이지 | 상품 목록 |
+| **홈페이지** | **상품 목록** |
 |:---:|:---:|
 | [![모바일 홈](./screenshots/09_homepage_mobile.png)](./screenshots/09_homepage_mobile.png) | [![모바일 상품목록](./screenshots/10_product_list_mobile.png)](./screenshots/10_product_list_mobile.png) |
 
@@ -99,7 +99,7 @@
 
 
 ## 📝 API 설계
-이 프로젝트는 RESTful 원칙을 준수하여 설계되었으며, 총 5개의 도메인으로 구분된 60개 이상의 API 엔드포인트를 제공합니다. 각 API는 역할 기반의 명확한 권한 제어(Public, User, Admin)를 통해 안전하게 데이터를 관리합니다.
+이 프로젝트는 RESTful 원칙을 준수하여 설계되었으며, 총 5개의 도메인으로 구분된 70개 이상의 API 엔드포인트를 제공합니다. 각 API는 역할 기반의 명확한 권한 제어(Public, User, Admin)를 통해 안전하게 데이터를 관리합니다.
 
 모든 API의 상세 명세(Endpoint, HTTP Method, Request/Response 등)는 아래의 별도 가이드 문서에서 확인하실 수 있습니다.
 
@@ -402,7 +402,7 @@ sudo systemctl restart redis-server
 ## 🔧 개발 과정
 
 ### 📋 핵심 개발 여정
-- **프로젝트 규모**: 13개 테이블, 60여 개 API, 20여 개 프론트엔드 페이지
+- **프로젝트 규모**: 13개 테이블, 70여 개 API, 약 20 개 프론트엔드 페이지
 - **주요 기술적 도전**: 
   - **아키텍처 설계 및 데이터 모델링**: 초기 단일 상품 구조에서 재고 관리, 옵션 관리의 한계를 발견하고, 이를 해결하기 위해 **'상품 마스터 → 상품 품목 → 재고'** 의 3단계 구조로 데이터베이스를 **점진적으로 리팩토링**하며 확장성과 데이터 정합성을 확보했습니다.
   - **인증 시스템 구축**: 상태 비저장(Stateless) 아키텍처를 위해 **JWT 이중 토큰(Access/Refresh)과 Redis 블랙리스트**를 조합하여, 보안성과 확장성을 모두 갖춘 인증 시스템의 기반을 마련했습니다.
