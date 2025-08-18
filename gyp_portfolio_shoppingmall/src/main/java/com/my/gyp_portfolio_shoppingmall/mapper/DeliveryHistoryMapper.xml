@@ -39,7 +39,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </sql>
 
     <!-- 배송 이력 정보 조회(orderProductId 기준) -->
-    <select id="getDeliveryHistory" parameterType="Integer" resultType="DeliveryHistory">
+    <select id="getDeliveryHistory" parameterType="Integer" resultType="DeliveryHistory" useCache="false" flushCache="true">
         <include refid="deliveryHistoryColumn" />
         WHERE order_product_id = #{orderProductId}
     </select>

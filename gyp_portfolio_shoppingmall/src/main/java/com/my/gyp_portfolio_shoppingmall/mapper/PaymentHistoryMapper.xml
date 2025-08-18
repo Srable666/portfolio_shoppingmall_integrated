@@ -96,7 +96,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </select>
     
     <!-- 결제 이력 검색(관리자용) -->
-    <select id="searchPaymentHistory" parameterType="com.my.gyp_portfolio_shoppingmall.dto.PaymentDto$PaymentHistorySearchDTO" resultType="PaymentHistory">
+    <select id="searchPaymentHistory" parameterType="com.my.gyp_portfolio_shoppingmall.dto.PaymentDto$PaymentHistorySearchDTO" resultType="PaymentHistory" useCache="false" flushCache="true">
         <include refid="paymentHistoryColumns" />
         <where>
             <if test="impUid != null and impUid != ''">

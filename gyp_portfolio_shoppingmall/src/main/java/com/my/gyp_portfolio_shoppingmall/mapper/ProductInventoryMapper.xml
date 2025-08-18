@@ -49,7 +49,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </update>
 
     <!-- 상품 품목 재고 목록 조회 -->
-    <select id="getProductInventories" parameterType="Integer" resultType="ProductInventory">
+    <select id="getProductInventories" parameterType="Integer" resultType="ProductInventory" useCache="false" flushCache="true">
         SELECT
             product_inventory_id as productInventoryId,
             product_item_id as productItemId,

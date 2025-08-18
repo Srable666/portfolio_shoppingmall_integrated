@@ -190,7 +190,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </sql>
 
     <!-- 회원 주문 조회(user_id 기준) -->
-    <select id="getUserOrderHistory" parameterType="Integer" resultMap="OrderHistoryMap">
+    <select id="getUserOrderHistory" parameterType="Integer" resultMap="OrderHistoryMap" useCache="false" flushCache="true">
         SELECT
             <include refid="orderHistoryColumn"/>
             <include refid="orderJoins"/>
@@ -201,7 +201,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </select>
 
     <!-- 단일 주문 상세 조회(order_id 기준) -->
-    <select id="getOrderDetail" parameterType="Integer" resultMap="OrderHistoryMap">
+    <select id="getOrderDetail" parameterType="Integer" resultMap="OrderHistoryMap" useCache="false" flushCache="true">
         SELECT
             <include refid="orderHistoryColumn"/>
         <include refid="orderJoins"/>
@@ -212,7 +212,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </select>
 
     <!-- 관리자용 주문 조회(검색 조건, 정렬 조건, 페이징 조건 포함) -->
-    <select id="getOrderListForAdmin" parameterType="Map" resultMap="OrderHistoryMap">
+    <select id="getOrderListForAdmin" parameterType="Map" resultMap="OrderHistoryMap" useCache="false" flushCache="true">
         SELECT
             <include refid="orderHistoryColumn"/>
         FROM orders o
