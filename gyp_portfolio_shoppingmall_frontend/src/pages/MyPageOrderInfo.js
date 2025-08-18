@@ -489,8 +489,6 @@ const OrderInfo = () => {
             setError(null);
 
             const response = await authRequest('get', '/order/orderList');
-
-            console.log('response', response);
             
             setOrders(response.data);
         } catch (error) {
@@ -573,21 +571,28 @@ const OrderInfo = () => {
     }, [authRequest, message, user]);
 
     // 구매확정 버튼 클릭 핸들러
-    const handleConfirmDelivery = useCallback(async (orderProductId) => {
+    const handleConfirmDelivery = useCallback(async (orderProductId, orderId, version) => {
         if (!user) return;
         
         try {
             const response = await authRequest(
                 'post', '/order/updateOrderStatusToDeliveryConfirmed', 
                 {
-                    orderProductId,
-                    orderId: selectedOrderDetail.orderId,
-                    version: selectedOrderProduct.version
+                    orderProductId: orderProductId,
+                    orderId: orderId,
+                    version: version
                 }
             );
             
             message.success(response.data);
-            await fetchOrderDetail(selectedOrderDetail.orderId);
+            
+            // 주문 상세 모달이 열려있는 경우에만 상세 정보 다시 조회
+            if (selectedOrderDetail && selectedOrderDetail.orderId === orderId) {
+                await fetchOrderDetail(orderId);
+            }
+            
+            // 주문 목록 새로고침
+            await fetchOrders(false);
         } catch (error) {
             console.error('구매 확정 처리 에러:', error);
         
@@ -604,7 +609,7 @@ const OrderInfo = () => {
         message, 
         selectedOrderDetail, 
         fetchOrderDetail, 
-        selectedOrderProduct, 
+        fetchOrders,
         user
     ]);
 
@@ -934,6 +939,7 @@ const OrderInfo = () => {
     // 작업 칼럼 렌더링
     const OrderActionColumn = React.memo(({ 
         orderProduct, 
+        orderId,
         onDeliveryCheck, 
         onConfirmDelivery,
         onRequestAction,
@@ -976,7 +982,11 @@ const OrderInfo = () => {
                     key="confirm"
                     type="primary"
                     size="small"
-                    onClick={() => onConfirmDelivery(orderProduct.orderProductId)}
+                    onClick={() => onConfirmDelivery(
+                        orderProduct.orderProductId, 
+                        orderId, 
+                        orderProduct.version
+                    )}
                 >
                     구매확정
                 </Button>,
@@ -1174,7 +1184,11 @@ const OrderInfo = () => {
                                                 type="primary"
                                                 size="small"
                                                 block
-                                                onClick={() => onConfirmDelivery(orderProduct.orderProductId)}
+                                                onClick={() => onConfirmDelivery(
+                                                    orderProduct.orderProductId, 
+                                                    orderMaster.orderId, 
+                                                    orderProduct.version
+                                                )}
                                             >
                                                 구매확정
                                             </OrderCardProductItemButton>
@@ -1389,6 +1403,7 @@ const OrderInfo = () => {
             width: 100,
             render: (_, record) => (
                 <OrderActionColumn
+                    orderId={record.orderId}
                     orderProduct={record.orderProduct}
                     onDeliveryCheck={fetchDeliveryHistory}
                     onConfirmDelivery={handleConfirmDelivery}
