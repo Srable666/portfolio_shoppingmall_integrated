@@ -437,10 +437,10 @@ const ProductDetail = () => {
 
     // 리뷰 조회
     useEffect(() => {
-        if (product?.productId) {
+        if (product?.productId && productItems.length > 0) {
             fetchReviews();
         }
-    }, [fetchReviews, product?.productId]);
+    }, [fetchReviews, product?.productId, productItems.length]);
     //#endregion Effect Hooks
     
 

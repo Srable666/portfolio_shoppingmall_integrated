@@ -10,17 +10,24 @@ public class PaymentHistory {
     private Integer paymentHistoryId;
     private String impUid;             // 포트원 결제 고유번호
     private String merchantUid;         // 주문번호
+    private String pgTid;               // PG 거래 고유번호
     private Integer orderId;            // 주문 ID
+    private String name;               // 결제 이름
     private PaymentStatus status;       // 결제 상태
-    private PaymentMethod paymentMethod;  // 결제 수단
-    private BigDecimal amount;          // 결제 금액
-    private String customerName;        // 고객 이름
-    private String customerEmail;       // 고객 이메일
-    private String customerPhone;       // 고객 전화번호
-    private LocalDateTime requestedAt;  // 결제 요청 시간
-    private String paymentData;         // 결제 상세 데이터(JSON)
+    private PaymentMethod payMethod;  // 결제 수단
+    private String pgProvider;            // PG 제공자
+    private String embPgProvider;         // 결제 수단
+    private BigDecimal paidAmount;          // 결제 금액
+    private String buyerName;        // 고객 이름
+    private String buyerEmail;       // 고객 이메일
+    private String buyerTel;       // 고객 전화번호
+    private String buyerAddr;       // 고객 주소
+    private String buyerPostcode;       // 고객 우편번호
+    private LocalDateTime paidAt;        // 결제 완료 시간
+    private String customData;       // 커스텀 데이터
+    private String receiptUrl;       // 영수증 URL
     private String errorCode;           // 오류 코드
-    private String errorMessage;        // 오류 메시지
+    private String errorMsg;        // 오류 메시지
     private LocalDateTime createdAt;    // 생성 시간
     private LocalDateTime updatedAt;    // 수정 시간
 
@@ -48,12 +55,28 @@ public class PaymentHistory {
         this.merchantUid = merchantUid;
     }   
 
+    public String getPgTid() {
+        return pgTid;
+    }   
+
+    public void setPgTid(String pgTid) {
+        this.pgTid = pgTid;
+    }   
+
     public Integer getOrderId() {
         return orderId;
     }   
 
     public void setOrderId(Integer orderId) {
         this.orderId = orderId;
+    }   
+
+    public String getName() {
+        return name;
+    }   
+
+    public void setName(String name) {
+        this.name = name;
     }   
 
     public PaymentStatus getStatus() {
@@ -64,60 +87,100 @@ public class PaymentHistory {
         this.status = status;
     }   
 
-    public PaymentMethod getPaymentMethod() {
-        return paymentMethod;
+    public PaymentMethod getPayMethod() {
+        return payMethod;
     }   
     
-    public void setPaymentMethod(PaymentMethod paymentMethod) {
-        this.paymentMethod = paymentMethod;
+    public void setPayMethod(PaymentMethod payMethod) {
+        this.payMethod = payMethod;
     }   
 
-    public BigDecimal getAmount() {
-        return amount;
+    public String getPgProvider() {
+        return pgProvider;
     }   
 
-    public void setAmount(BigDecimal amount) {
-        this.amount = amount;
-    }   
-    
-    public String getCustomerName() {
-        return customerName;
+    public void setPgProvider(String pgProvider) {
+        this.pgProvider = pgProvider;
     }   
 
-    public void setCustomerName(String customerName) {
-        this.customerName = customerName;
+    public String getEmbPgProvider() {
+        return embPgProvider;
     }   
 
-    public String getCustomerEmail() {
-        return customerEmail;
+    public void setEmbPgProvider(String embPgProvider) {
+        this.embPgProvider = embPgProvider;
     }   
 
-    public void setCustomerEmail(String customerEmail) {
-        this.customerEmail = customerEmail;
+    public BigDecimal getPaidAmount() {
+        return paidAmount;
     }   
 
-    public String getCustomerPhone() {
-        return customerPhone;
+    public void setPaidAmount(BigDecimal paidAmount) {
+        this.paidAmount = paidAmount;
     }   
 
-    public void setCustomerPhone(String customerPhone) {
-        this.customerPhone = customerPhone;
+    public String getBuyerName() {
+        return buyerName;
     }   
 
-    public LocalDateTime getRequestedAt() {
-        return requestedAt;
+    public void setBuyerName(String buyerName) {
+        this.buyerName = buyerName;
     }   
 
-    public void setRequestedAt(LocalDateTime requestedAt) {
-        this.requestedAt = requestedAt;
+    public String getBuyerEmail() {
+        return buyerEmail;
     }   
 
-    public String getPaymentData() {
-        return paymentData;
+    public void setBuyerEmail(String buyerEmail) {
+        this.buyerEmail = buyerEmail;
     }   
 
-    public void setPaymentData(String paymentData) {
-        this.paymentData = paymentData;
+    public String getBuyerTel() {
+        return buyerTel;
+    }   
+
+    public void setBuyerTel(String buyerTel) {
+        this.buyerTel = buyerTel;
+    }   
+
+    public String getBuyerAddr() {
+        return buyerAddr;
+    }   
+
+    public void setBuyerAddr(String buyerAddr) {
+        this.buyerAddr = buyerAddr;
+    }   
+
+    public String getBuyerPostcode() {
+        return buyerPostcode;
+    }   
+
+    public void setBuyerPostcode(String buyerPostcode) {
+        this.buyerPostcode = buyerPostcode;
+    }   
+
+    public LocalDateTime getPaidAt() {
+        return paidAt;
+    }   
+
+    public void setPaidAt(LocalDateTime paidAt) {
+        this.paidAt = paidAt;
+    }   
+
+    public String getCustomData() {
+        return customData;
+    }   
+
+    public void setCustomData(String customData) {
+        this.customData = customData;
+    }   
+
+    public String getReceiptUrl() {
+        return receiptUrl;
+    }   
+
+    public void setReceiptUrl(String receiptUrl) {
+        this.receiptUrl = receiptUrl;
     }   
 
     public String getErrorCode() {
@@ -128,12 +191,12 @@ public class PaymentHistory {
         this.errorCode = errorCode;
     }   
 
-    public String getErrorMessage() {
-        return errorMessage;
+    public String getErrorMsg() {
+        return errorMsg;
     }   
 
-    public void setErrorMessage(String errorMessage) {
-        this.errorMessage = errorMessage;
+    public void setErrorMsg(String errorMsg) {
+        this.errorMsg = errorMsg;
     }       
 
     public LocalDateTime getCreatedAt() {

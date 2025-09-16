@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useContext, useEffect } from 'react';
+import { modalSizeStyle, modalCommonStyle } from '../styles/modalStyles';
 import { useResponsive } from '../contexts/ResponsiveContext';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import { usePayment } from '../contexts/PaymentContext';
@@ -10,7 +11,7 @@ import styled from 'styled-components';
 import {
     Form, Input, Button, Table,
     Row, Col, Divider, Typography,
-    Spin, App, Card, Tooltip,
+    Spin, App, Card, Tooltip, Modal,
 } from 'antd';
 
 const { Text } = Typography;
@@ -136,6 +137,46 @@ const MobileOrderCard = styled(Card)`
         border-top: 1px solid #f0f0f0;
     }
 `;
+
+// 결제 수단 모달 스타일
+const PaymentMethodModal = styled(Modal)`
+    ${modalSizeStyle(400)}
+    ${modalCommonStyle}
+
+    .ant-modal-body {
+        padding-top: 10px;
+    }
+`;
+
+// 결제 수단 버튼 스타일
+const PaymentMethodButton = styled(Button)`
+    height: 80px;
+    width: 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 8px;
+    
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        transition: all 0.2s ease;
+    }
+`;
+
+// 테스트 결제 안내 문구 스타일
+const PaymentMethodInfo = styled.div`
+    margin-top: 20px;
+    padding: 12px;
+    background-color: #fff2f0;
+    border: 1px solid #ffccc7;
+    border-radius: 6px;
+    text-align: center;
+`;
 //#endregion Styled Components
 
 
@@ -147,49 +188,19 @@ const OrderPage = () => {
 
     const { message } = App.useApp();
     const { isMobile } = useResponsive();
+    const { requestPayment, isMobilePayment } = usePayment();
     const { user, authRequest } = useContext(AuthContext);
-    const { sdkInitialized, requestPayment } = usePayment();
     const { cartItems, getTotalPrice, clearCart } = useCart();
 
     const [form] = Form.useForm();
     const [isOrdering, setIsOrdering] = useState(false);
     const [userLoading, setUserLoading] = useState(false);
+    const [paymentModalVisible, setPaymentModalVisible] = useState(false);
     
     const FREE_SHIPPING_THRESHOLD = 50000;
     //#endregion Hooks & States
     
-    
-    //#region API Functions    
-    // 주문 생성 API 호출
-    const createOrder = async (paymentInfo, impUid, paymentMethod) => {
-        const response = await fetch('/api/order/insertOrder', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                merchantUid: paymentInfo.orderCode,
-                impUid,
-                userId: user.userId,
-                products: cartItems,
-                totalPrice: paymentInfo.amount - calculateShippingFee(getTotalPrice()),
-                shippingFee: calculateShippingFee(getTotalPrice()),
-                paymentMethod,
-                recipientName: paymentInfo.buyerName,
-                recipientPhone: paymentInfo.buyerTel,
-                recipientPostcode: paymentInfo.buyerPostcode,
-                recipientAddress: paymentInfo.buyerAddr,
-                deliveryRequest: paymentInfo.customData.deliveryRequest
-            })
-        });
-
-        if (!response.ok) {
-            throw new Error('주문 생성에 실패했습니다.');
-        }
-
-        return response.json();
-    };
-
+    //#region API Functions
     // 사용자 상세 정보 조회
     const fetchUserDetails = useCallback(async () => {
         setUserLoading(true);
@@ -223,74 +234,6 @@ const OrderPage = () => {
 
 
     //#region Event Handlers
-    // 결제 처리
-    const handleOrder = async () => {
-        try {            
-            // 강제 초기화 시도
-            if (!sdkInitialized && window.IMP) {
-                try {
-                    window.IMP.init(process.env.REACT_APP_PORTONE_IMP);
-                    console.log('수동 SDK 초기화 성공');
-                } catch (error) {
-                    console.error('수동 SDK 초기화 실패:', error);
-                }
-            }
-    
-            if (!window.IMP) {
-                alert('포트원 SDK가 로드되지 않았습니다. 페이지를 새로고침해주세요.');
-                return;
-            }
-
-            setIsOrdering(true);
-
-            const values = await form.validateFields();
-            
-            const orderCode = `ORD_${new Date().getTime()}`;
-            const paymentInfo = {
-                orderCode,
-                amount: getTotalPrice() + calculateShippingFee(getTotalPrice()),
-                productName: cartItems[0].name + (cartItems.length > 1 ? ` 외 ${cartItems.length - 1}건` : ''),
-                buyerName: values.recipientName,
-                buyerEmail: user.email,
-                buyerTel: values.recipientPhone,
-                buyerAddr: `${values.recipientAddress} ${values.recipientAddressDetail || ''}`,
-                buyerPostcode: values.recipientPostcode,
-                customData: {
-                    userId: user.userId,
-                    deliveryRequest: values.deliveryRequest
-                },
-            };
-
-            // 결제창 호출
-            const paymentResult = await requestPayment(paymentInfo);
-    
-            if (paymentResult.success) {
-                // 주문 생성
-                await createOrder(paymentInfo, paymentResult.imp_uid, paymentResult.pay_method);
-                
-                clearCart();
-                message.success('주문이 완료되었습니다.');
-                navigate('/mypage/orders');
-            }
-        } catch (error) {
-            console.error('Order Error:', error);
-        
-            // 모바일 환경에서는 리디렉션으로 인해 에러 처리가 필요 없음
-            if (!/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-                if (error.message?.includes('PAY_PROCESS_CANCELED')) {
-                    message.info('결제가 취소되었습니다.');
-                } else {
-                    message.error('결제 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
-                }
-            }
-        } finally {
-            // 모바일 환경에서는 리디렉션으로 인해 실행되지 않음
-            if (!/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-                setIsOrdering(false);
-            }
-        }
-    };
-
     // 주소 검색 핸들러
     const handleAddressSearch = () => {
         new window.daum.Postcode({
@@ -305,6 +248,89 @@ const OrderPage = () => {
                 }
             }
         }).open();
+    };
+    
+    // 결제하기 버튼 클릭 (모달 열기)
+    const handlePaymentClick = async () => {
+        try {
+            // 폼 검증 먼저 실행
+            await form.validateFields();
+            
+            // 검증 통과하면 결제 수단 선택 모달 열기
+            setPaymentModalVisible(true);
+        } catch (error) {
+            console.error('폼 검증 실패:', error);
+        }
+    };
+
+    // 결제 수단 선택 후 포트원 결제창 열기
+    const handlePaymentMethodSelect = async (paymentMethod) => {
+        try {
+            message.loading('결제창을 불러오는 중입니다. 잠시만 기다려주세요...', 5);
+
+            if (!window.IMP) {
+                alert('포트원 SDK가 로드되지 않았습니다. 페이지를 새로고침해주세요.');
+                return;
+            }
+
+            setIsOrdering(true);
+
+            const values = form.getFieldsValue();
+
+            const paymentInfo = {
+                amount: getTotalPrice() + calculateShippingFee(getTotalPrice()),
+                name: cartItems[0].name + (cartItems.length > 1 ? ` 외 ${cartItems.length - 1}건` : ''),
+                buyerName: values.recipientName,
+                buyerEmail: user.email,
+                buyerTel: values.recipientPhone,
+                buyerAddr: `${values.recipientAddress} ${values.recipientAddressDetail || ''}`,
+                buyerPostcode: values.recipientPostcode,
+                deliveryRequest: values.deliveryRequest,
+                paymentMethod
+            };
+
+            const orderData = {
+                products: cartItems,
+                totalPrice: getTotalPrice(),
+                shippingFee: calculateShippingFee(getTotalPrice())
+            };
+
+            const result = await requestPayment(paymentInfo, orderData);
+
+            if (result.success) {
+                setPaymentModalVisible(false);
+                if (!isMobilePayment) {
+                    message.success(result.order);
+                    clearCart();
+                    navigate('/order/complete');
+                }
+            }
+        } catch (error) {
+            message.destroy();
+            console.error('Order Error:', error);
+
+            // 모바일 환경에서는 리디렉션으로 인해 에러 처리가 필요 없음
+            if (!/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+                if (error.name === 'PaymentError') {
+                    // PaymentError의 원본 메시지나 코드에 따라 분기
+                    if (error.message?.includes('PAY_PROCESS_CANCELED') || 
+                        error.message?.includes('사용자가 결제를 취소')) {
+                        message.info('결제가 취소되었습니다.');
+                    } else if (error.code === 'NETWORK_ERROR') {
+                        message.error('네트워크 연결을 확인해주세요.');
+                    } else {
+                        message.error('결제 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+                    }
+                } else {
+                    message.error('결제 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+                }
+            }
+        } finally {
+            // 모바일 환경에서는 리디렉션으로 인해 실행되지 않음
+            if (!/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+                setIsOrdering(false);
+            }
+        }
     };
     //#endregion Event Handlers
 
@@ -381,12 +407,12 @@ const OrderPage = () => {
         },
         {
             title: '상품금액',
-            dataIndex: 'price',
-            key: 'price',
+            dataIndex: 'finalPrice',
+            key: 'finalPrice',
             align: 'center',
-            render: (price, record) => (
+            render: (finalPrice, record) => (
                 <Text strong>
-                    ￦{(price * record.quantity).toLocaleString()}
+                    ￦{(finalPrice * record.quantity).toLocaleString()}
                 </Text>
             ),
         },
@@ -423,7 +449,7 @@ const OrderPage = () => {
                     </div>
                     <div className="card-footer">
                         <Text>수량: {item.quantity}개</Text>
-                        <Text strong>￦{(item.price * item.quantity).toLocaleString()}</Text>
+                        <Text strong>￦{(item.finalPrice * item.quantity).toLocaleString()}</Text>
                     </div>
                 </MobileOrderCard>
             ))}
@@ -576,12 +602,75 @@ const OrderPage = () => {
                 <Button 
                     type="primary" 
                     size="large"
-                    onClick={handleOrder}
+                    onClick={handlePaymentClick}
                     loading={isOrdering}
                 >
                     결제하기
                 </Button>
             </Row>
+
+            {/* 결제 수단 선택 모달 */}
+            <PaymentMethodModal
+                title="결제 수단 선택"
+                open={paymentModalVisible}
+                onCancel={() => setPaymentModalVisible(false)}
+                footer={null}
+            >
+                <Row gutter={[0, 12]} style={{ flexDirection: 'column', alignItems: 'center' }}>
+                    <Col span={24}>
+                        <PaymentMethodButton 
+                            size="large"
+                            onClick={() => handlePaymentMethodSelect('kakaopay')}
+                            style={{ borderColor: '#FEE500' }}
+                        >
+                            <img 
+                                src="https://developers.kakao.com/tool/resource/static/img/button/pay/payment_icon_yellow_medium.png"
+                                alt="카카오페이"
+                                className="payment-icon"
+                                style={{ width: '64px', objectFit: 'contain' }}
+                            />
+                        </PaymentMethodButton>
+                    </Col>
+                    <Col span={24}>
+                        <PaymentMethodButton 
+                            size="large"
+                            onClick={() => handlePaymentMethodSelect('tosspay')}
+                            style={{ borderColor: '#4285F4' }}
+                        >
+                            <img 
+                                src="https://framerusercontent.com/images/Drn1qQIO9e99xqU7xmBBG8NjG8.jpg"
+                                alt="토스페이"
+                                className="payment-icon"
+                                style={{ height: '75px', objectFit: 'contain' }}
+                            />
+                        </PaymentMethodButton>
+                    </Col>
+                    <Col span={24}>
+                        <PaymentMethodButton 
+                            size="large"
+                            onClick={() => handlePaymentMethodSelect('naverpay')}
+                            style={{ borderColor: '#03C75A' }}
+                        >
+                            <img 
+                                src="https://developers.pay.naver.com/img/logo/signature/logo_navergr_small.svg"
+                                alt="네이버페이"
+                                className="payment-icon"
+                                style={{ width: '64px', objectFit: 'contain' }}
+                            />
+                            <div style={{ fontSize: '10px', color: '#666', marginTop: '4px' }}>
+                                ※카드결제만 지원
+                            </div>
+                        </PaymentMethodButton>
+                    </Col>
+                </Row>
+    
+                {/* 테스트 결제 안내 문구 */}
+                <PaymentMethodInfo>
+                    <Text style={{ color: '#ff4d4f', fontSize: '12px', fontWeight: 'bold' }}>
+                        ⚠️ 실제 결제되지 않는 테스트 결제입니다. 다만, 실제 결제가 되지 않더라도 선택한 결제 금액만큼의 잔액은 반드시 있어야 정상진행됩니다.
+                    </Text>
+                </PaymentMethodInfo>
+            </PaymentMethodModal>
         </OrderContainer>
     );
     //#endregion Render Functions

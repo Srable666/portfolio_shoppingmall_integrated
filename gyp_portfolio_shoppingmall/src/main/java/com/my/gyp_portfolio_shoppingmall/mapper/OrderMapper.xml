@@ -8,6 +8,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <insert id="insertOrder" parameterType="Order" useGeneratedKeys="true" keyProperty="orderId">
         INSERT INTO orders (
             user_id,
+            merchant_uid,
             delivery_fee,
             original_total_price,
             current_total_price,
@@ -19,6 +20,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             payment_method
         ) VALUES (
             #{userId},
+            #{merchantUid},
             #{deliveryFee},
             #{originalTotalPrice},
             #{currentTotalPrice},

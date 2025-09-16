@@ -19,13 +19,14 @@ public class OrderDto {
     // 주문 접수
     @Getter @Setter
     public static class NewOrderDTO {
+        private String merchantUid;
         private Integer deliveryFee;
         private String recipientName;
         private String recipientPhone;
         private String recipientPostcode;
         private String recipientAddress;
         private String deliveryRequest;
-        private PaymentMethod paymentMethod;
+        private String paymentMethod;
         private List<OrderProductDTO> orderProductDTOList;
     }
 

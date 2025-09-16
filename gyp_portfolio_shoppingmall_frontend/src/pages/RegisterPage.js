@@ -153,10 +153,12 @@ const RegisterPage = () => {
                 detailAddress: values.addressDetail
             });
             
+            message.destroy();
             message.success(response.data);
             navigate('/login');
         } catch (error) {
             console.error('회원가입 에러:', error);
+            message.destroy();
             
             if (!error.response) {
                 message.warning('네트워크 연결을 확인해주세요.');
@@ -165,7 +167,6 @@ const RegisterPage = () => {
             }
         } finally {
             setLoading(false);
-            message.destroy();
         }
     };
 

@@ -8,31 +8,43 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         INSERT INTO payment_histories (
             imp_uid,
             merchant_uid,
-            order_id,
+            pg_tid,
+            name,
             status,
-            payment_method,
-            amount,
-            customer_name,
-            customer_email,
-            customer_phone,
-            requested_at,
-            payment_data,
+            pay_method,
+            pg_provider,
+            emb_pg_provider,
+            paid_amount,
+            buyer_name,
+            buyer_email,
+            buyer_tel,
+            buyer_addr,
+            buyer_postcode,
+            paid_at,
+            custom_data,
+            receipt_url,
             error_code,
-            error_message
+            error_msg
         ) VALUES (
             #{impUid},
             #{merchantUid},
-            #{orderId},
+            #{pgTid},
+            #{name},
             #{status},
-            #{paymentMethod},
-            #{amount},
-            #{customerName},
-            #{customerEmail},
-            #{customerPhone},
-            #{requestedAt},
-            #{paymentData},
+            #{payMethod},
+            #{pgProvider},
+            #{embPgProvider},
+            #{paidAmount},
+            #{buyerName},
+            #{buyerEmail},
+            #{buyerTel},
+            #{buyerAddr},
+            #{buyerPostcode},
+            #{paidAt},
+            #{customData},
+            #{receiptUrl},
             #{errorCode},
-            #{errorMessage}
+            #{errorMsg}
         )
     </insert>
 
@@ -43,16 +55,23 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             imp_uid as impUid,
             merchant_uid as merchantUid,
             order_id as orderId,
+            pg_tid as pgTid,
+            name as name,
             status as status,
-            payment_method as paymentMethod,
-            amount as amount,
-            customer_name as customerName,
-            customer_email as customerEmail,
-            customer_phone as customerPhone,
-            requested_at as requestedAt,
-            payment_data as paymentData,
+            pay_method as payMethod,
+            pg_provider as pgProvider,
+            emb_pg_provider as embPgProvider,
+            paid_amount as paidAmount,
+            buyer_name as buyerName,
+            buyer_email as buyerEmail,
+            buyer_tel as buyerTel,
+            buyer_addr as buyerAddr,
+            buyer_postcode as buyerPostcode,
+            paid_at as paidAt,
+            custom_data as customData,
+            receipt_url as receiptUrl,
             error_code as errorCode,
-            error_message as errorMessage,
+            error_msg as errorMsg,
             created_at as createdAt,
             updated_at as updatedAt
         FROM payment_histories
@@ -63,15 +82,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         UPDATE payment_histories
         SET
             status = #{status},
-            payment_method = #{paymentMethod},
-            amount = #{amount},
-            customer_name = #{customerName},
-            customer_email = #{customerEmail},
-            customer_phone = #{customerPhone},
-            requested_at = #{requestedAt},
-            payment_data = #{paymentData},
+            paid_amount = #{paidAmount},
+            paid_at = #{paidAt},
+            custom_data = #{customData},
+            receipt_url = #{receiptUrl},
             error_code = #{errorCode},
-            error_message = #{errorMessage}
+            error_msg = #{errorMsg}
         WHERE imp_uid = #{impUid}
     </update>
 
@@ -105,8 +121,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="merchantUid != null and merchantUid != ''">
                 AND merchant_uid LIKE CONCAT('%', #{merchantUid}, '%')
             </if>
-            <if test="customerEmail != null and customerEmail != ''">
-                AND customer_email LIKE CONCAT('%', #{customerEmail}, '%')
+            <if test="buyerEmail != null and buyerEmail != ''">
+                AND buyer_email LIKE CONCAT('%', #{buyerEmail}, '%')
             </if>
             <if test="orderId != null">
                 AND order_id = #{orderId}
@@ -114,14 +130,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="status != null and status != ''">
                 AND status = #{status}
             </if>
-            <if test="paymentMethod != null and paymentMethod != ''">
-                AND payment_method = #{paymentMethod}
+            <if test="payMethod != null and payMethod != ''">
+                AND pay_method = #{payMethod}
             </if>
             <if test="startDate != null">
-                AND requested_at &gt;= #{startDate}
+                AND paid_at &gt;= #{startDate}
             </if>
             <if test="endDate != null">
-                AND requested_at &lt;= #{endDate}
+                AND paid_at &lt;= #{endDate}
             </if>
         </where>
         ORDER BY created_at DESC
@@ -129,7 +145,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <!-- 총 매출 조회 -->
     <select id="getTotalRevenue" resultType="long">
-        SELECT COALESCE(SUM(amount), 0)
+        SELECT COALESCE(SUM(paid_amount), 0)
         FROM payment_histories
         WHERE status = 'PAID'
         AND error_code IS NULL
@@ -140,4 +156,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         SELECT COUNT(*)
         FROM payment_histories
     </select>
+    
+    <!-- 주문 ID 업데이트 (merchant_uid 기준) -->
+    <update id="updateOrderId" parameterType="PaymentHistory">
+        UPDATE payment_histories 
+        SET order_id = #{orderId}
+        WHERE merchant_uid = #{merchantUid}
+    </update>
 </mapper>

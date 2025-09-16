@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.my.gyp_portfolio_shoppingmall.dao.OrderDao;
+import com.my.gyp_portfolio_shoppingmall.dao.PaymentHistoryDao;
 import com.my.gyp_portfolio_shoppingmall.dao.ProductDao;
 import com.my.gyp_portfolio_shoppingmall.dao.UserDao;
 import com.my.gyp_portfolio_shoppingmall.dto.OrderDto.DeliveryInfoDTO;
@@ -25,12 +26,12 @@ import com.my.gyp_portfolio_shoppingmall.dto.OrderDto.UserOrderHistoryDTO;
 import com.my.gyp_portfolio_shoppingmall.enums.OrderEnums.DeliveryStatus;
 import com.my.gyp_portfolio_shoppingmall.enums.OrderEnums.DeliveryType;
 import com.my.gyp_portfolio_shoppingmall.enums.OrderEnums.OrderProductStatus;
+import com.my.gyp_portfolio_shoppingmall.enums.OrderEnums.PaymentMethod;
 import com.my.gyp_portfolio_shoppingmall.enums.ProductEnums.ProductInventoryStatus;
 import com.my.gyp_portfolio_shoppingmall.exception.OrderException;
 import com.my.gyp_portfolio_shoppingmall.exception.ProductException;
 import com.my.gyp_portfolio_shoppingmall.exception.UserException;
 import com.my.gyp_portfolio_shoppingmall.support.OptimisticLock;
-import com.my.gyp_portfolio_shoppingmall.support.OrderSupport;
 import com.my.gyp_portfolio_shoppingmall.support.PhoneEncryptionUtil;
 import com.my.gyp_portfolio_shoppingmall.support.UserSupport;
 import com.my.gyp_portfolio_shoppingmall.vo.DeliveryHistory;
@@ -52,6 +53,7 @@ public class OrderService {
     private final UserDao userDao;
     private final OrderDao orderDao;
     private final ProductDao productDao;
+    private final PaymentHistoryDao paymentHistoryDao;
     private final PhoneEncryptionUtil phoneEncryptionUtil;
     
     // 상태 업데이트만 수행하는 낙관적 잠금 전용 메서드
@@ -98,13 +100,14 @@ public class OrderService {
         // 주문 정보 정리
         Order order = new Order();
         order.setUserId(userCheck.getUserId());
+        order.setMerchantUid(newOrderDTO.getMerchantUid());
         order.setDeliveryFee(newOrderDTO.getDeliveryFee());
         order.setRecipientName(newOrderDTO.getRecipientName());
         order.setRecipientPhone(phoneEncryptionUtil.encrypt(newOrderDTO.getRecipientPhone()));
         order.setRecipientPostcode(newOrderDTO.getRecipientPostcode());
         order.setRecipientAddress(newOrderDTO.getRecipientAddress());
         order.setDeliveryRequest(newOrderDTO.getDeliveryRequest());
-        order.setPaymentMethod(newOrderDTO.getPaymentMethod());
+        order.setPaymentMethod(PaymentMethod.valueOf(newOrderDTO.getPaymentMethod().toUpperCase()));
 
         // 총 주문금액 계산
         BigDecimal totalPrice = newOrderDTO.getOrderProductDTOList().stream()
@@ -114,16 +117,10 @@ public class OrderService {
         order.setOriginalTotalPrice(totalPrice);
         order.setCurrentTotalPrice(totalPrice);
 
-        // 주문 정보 생성 후 orderId 반환받아 order 객체에 저장
-        orderDao.insertOrder(order);
+        // 주문 정보 생성 후 orderId 반환받아 저장
+        int orderId = orderDao.insertOrder(order);
 
-        // merchantUid 생성
-        String merchantUid;
-        do {
-            merchantUid = OrderSupport.generateMerchantUid();
-        } while (orderDao.getOrderInfoByMerchantUid(merchantUid) != null);
-        order.setMerchantUid(merchantUid);
-        orderDao.updateOrder(order);
+        paymentHistoryDao.updateOrderId(newOrderDTO.getMerchantUid(), orderId);
 
         // 주문한 상품 정보 저장 및 재고 예약
         for (OrderProductDTO orderProductDTO : newOrderDTO.getOrderProductDTOList()) {
@@ -139,13 +136,13 @@ public class OrderService {
             orderProduct.setFinalPrice(orderProductDTO.getFinalPrice());
             orderProduct.setSize(orderProductDTO.getSize());
             orderProduct.setColor(orderProductDTO.getColor());
-            orderProduct.setStatus(OrderProductStatus.PAYMENT_PENDING);
+            orderProduct.setStatus(OrderProductStatus.PAYMENT_COMPLETED);
             orderDao.insertOrderProduct(orderProduct);
 
             // 주문한 상품 이력 정보 생성
             OrderProductHistory orderProductHistory = new OrderProductHistory();
             orderProductHistory.setOrderProductId(orderProduct.getOrderProductId());
-            orderProductHistory.setStatusTo(OrderProductStatus.PAYMENT_PENDING);
+            orderProductHistory.setStatusTo(OrderProductStatus.PAYMENT_COMPLETED);
             orderProductHistory.setReason("주문 접수");
             orderDao.insertOrderProductHistory(orderProductHistory);
 

@@ -87,7 +87,9 @@ export const CartProvider = ({ children }) => {
             categoryCode: product.categoryCode,
             productCode: product.code,
             imageUrl: imageUrl,
-            price: product.finalPrice,
+            price: product.basePrice,
+            discountRate: product.discountRate,
+            finalPrice: product.finalPrice,
             size: productItem.size,
             color: productItem.color,
             quantity: quantity,
@@ -174,7 +176,7 @@ export const CartProvider = ({ children }) => {
 
     // 장바구니 총 가격 계산
     const getTotalPrice = useCallback(() => {
-        return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+        return cartItems.reduce((total, item) => total + (item.finalPrice * item.quantity), 0);
     }, [cartItems]);
 
     // 장바구니 총 아이템 수 계산

@@ -430,8 +430,11 @@ const MainContent = styled(Content)`
     flex-direction: column;
     flex: 1;
     overflow-y: auto;
-    flex-direction: column;
     transition: margin-top 0.3s ease;
+
+    @media (min-width: 769px) {
+        margin-top: 113px;
+    }
 
     > div {
         background: #fff;
@@ -446,10 +449,10 @@ const MainContent = styled(Content)`
     footer {
         text-align: center;
         padding: 12px 25px;
-    }
 
-    @media (min-width: 769px) {
-        margin-top: 113px;
+        @media (max-width: 768px) {
+            margin-bottom: 60px;
+        }
     }
 `;
 

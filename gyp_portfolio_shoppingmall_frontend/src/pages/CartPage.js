@@ -168,7 +168,7 @@ const CartPage = () => {
     //#region Utility Functions
     // 총 상품 금액 계산
     const totalPrice = cartItems.reduce((sum, item) => {
-        return sum + (item.price * item.quantity);
+        return sum + (item.finalPrice * item.quantity);
     }, 0);
 
     // 배송비 계산
@@ -247,12 +247,12 @@ const CartPage = () => {
         },
         {
             title: '상품 금액',
-            dataIndex: 'price',
-            key: 'price',
+            dataIndex: 'finalPrice',
+            key: 'finalPrice',
             width: 120,
             align: 'center',
-            render: (price, record) => (
-                <PriceRenderer price={price} quantity={record.quantity} />
+            render: (finalPrice, record) => (
+                <PriceRenderer finalPrice={finalPrice} quantity={record.quantity} />
             ),
         },
         {
@@ -328,8 +328,8 @@ const CartPage = () => {
     );
 
     // 가격 렌더러
-    const PriceRenderer = ({ price, quantity }) => (
-        <Text strong>￦{(price * quantity).toLocaleString()}</Text>
+    const PriceRenderer = ({ finalPrice, quantity }) => (
+        <Text strong>￦{(finalPrice * quantity).toLocaleString()}</Text>
     );
 
     // 삭제 버튼 렌더러
@@ -403,7 +403,7 @@ const CartPage = () => {
                             </Button>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            <Text strong>￦{(item.price * item.quantity).toLocaleString()}</Text>
+                            <Text strong>￦{(item.finalPrice * item.quantity).toLocaleString()}</Text>
                             <Button
                                 type="text"
                                 danger

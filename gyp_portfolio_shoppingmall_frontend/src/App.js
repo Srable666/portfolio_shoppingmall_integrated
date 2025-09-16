@@ -23,6 +23,8 @@ import OrderInfo from './pages/MyPageOrderInfo';
 import RegisterPage from './pages/RegisterPage';
 import ProductDetail from './pages/ProductDetail';
 import ProductListPage from './pages/ProductListPage';
+import OrderProcessPage from './pages/OrderProcessPage';
+import OrderCompletePage from './pages/OrderCompletePage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import UserInfoManagement from './pages/MyPageUserInfoManagement';
@@ -35,7 +37,6 @@ import AdminPayments from './pages/AdminPayments';
 import AdminProducts from './pages/AdminProducts';
 import AdminLayout from './components/AdminLayout';
 import AdminDashboard from './pages/AdminDashboard';
-import OrderCompletePage from './pages/OrderCompletePage';
 
 // 전역 스타일 적용
 const GlobalStyle = createGlobalStyle`
@@ -65,6 +66,7 @@ function App() {
                     <Route path="/" element={<Layout />}>
                       <Route path="cart" element={<CartPage />} />
                       <Route path="order" element={<OrderPage />} />
+                      <Route path="order/process" element={<OrderProcessPage />} />
                       <Route path="order/complete" element={<OrderCompletePage />} />
                       <Route path="mypage/orderinfo" element={<OrderInfo />} />
                       <Route path="mypage/userinfo" element={<UserInfoManagement />} />

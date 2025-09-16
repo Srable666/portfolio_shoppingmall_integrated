@@ -201,7 +201,7 @@ const AdminPayments = () => {
             const requestParams = { 
                 impUid: params.impUid || '',
                 merchantUid: params.merchantUid || '',
-                customerEmail: params.customerEmail || '',
+                buyerEmail: params.buyerEmail || '',
                 startDate: params.startDate || '',
                 endDate: params.endDate || '',
             };
@@ -274,13 +274,11 @@ const AdminPayments = () => {
 
     const getPaymentMethodLabel = (paymentMethod) => {
         const labelMap = {
-            'card': '신용카드',
-            'trans': '계좌이체',
-            'vbank': '가상계좌',
-            'phone': '휴대폰',
-            'kakaopay': '카카오페이',
-            'naverpay': '네이버페이',
-            'tosspay': '토스페이'
+            'KAKAOPAY': '카카오페이',
+            'NAVERPAY': '네이버페이',
+            'TOSSPAY': '토스페이',
+            'CARD': '신용카드',
+            'POINT': '포인트'
         };
         return labelMap[paymentMethod] || paymentMethod;
     };
@@ -316,10 +314,10 @@ const AdminPayments = () => {
     const columns = [
         {
             title: '결제요청일',
-            dataIndex: 'requestedAt',
-            key: 'requestedAt',
+            dataIndex: 'createdAt',
+            key: 'createdAt',
             align: 'center',
-            sorter: (a, b) => new Date(a.requestedAt) - new Date(b.requestedAt),
+            sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
             render: (date) => formatDate(date, false)
         },
         {
@@ -338,7 +336,7 @@ const AdminPayments = () => {
                         fetchPayments({
                             impUid: impUid,
                             merchantUid: '',
-                            customerEmail: '',
+                            buyerEmail: '',
                             startDate: '',
                             endDate: ''
                         });
@@ -364,7 +362,7 @@ const AdminPayments = () => {
                         fetchPayments({
                             impUid: '',
                             merchantUid: merchantUid,
-                            customerEmail: '',
+                            buyerEmail: '',
                             startDate: '',
                             endDate: ''
                         });
@@ -376,52 +374,50 @@ const AdminPayments = () => {
         },
         {
             title: '회원 이메일',
-            dataIndex: 'customerEmail',
-            key: 'customerEmail',
+            dataIndex: 'buyerEmail',
+            key: 'buyerEmail',
             align: 'center',
-            render: (customerEmail) => (
+            render: (buyerEmail) => (
                 <ClickableCellButton 
                     type="link" 
                     className="clickable-cell"
                     onClick={() => {
-                        setSearchType('customerEmail');
-                        setSearchKeyword(customerEmail);
+                        setSearchType('buyerEmail');
+                        setSearchKeyword(buyerEmail);
                         fetchPayments({
                             impUid: '',
                             merchantUid: '',
-                            customerEmail: customerEmail,
+                            buyerEmail: buyerEmail,
                             startDate: '',
                             endDate: ''
                         });
                     }}
                 >
-                    {customerEmail}
+                    {buyerEmail}
                 </ClickableCellButton>
             )
         },
         {
             title: '결제금액',
-            dataIndex: 'amount',
-            key: 'amount',
+            dataIndex: 'paidAmount',
+            key: 'paidAmount',
             align: 'center',
-            sorter: (a, b) => Number(a.amount) - Number(b.amount),
-            render: (amount) => `₩${Number(amount).toLocaleString()}`
+            sorter: (a, b) => Number(a.paidAmount) - Number(b.paidAmount),
+            render: (paidAmount) => `₩${Number(paidAmount).toLocaleString()}`
         },
         {
             title: '결제수단',
-            dataIndex: 'paymentMethod',
-            key: 'paymentMethod',
+            dataIndex: 'embPgProvider',
+            key: 'embPgProvider',
             align: 'center',
             filters: [
-                { text: '신용카드', value: 'card' },
-                { text: '계좌이체', value: 'trans' },
-                { text: '가상계좌', value: 'vbank' },
-                { text: '휴대폰', value: 'phone' },
-                { text: '카카오페이', value: 'kakaopay' },
-                { text: '네이버페이', value: 'naverpay' },
-                { text: '토스페이', value: 'tosspay' }
+                { text: '신용카드', value: 'CARD' },
+                { text: '휴대폰', value: 'PHONE' },
+                { text: '카카오페이', value: 'KAKAOPAY' },
+                { text: '네이버페이', value: 'NAVERPAY' },
+                { text: '토스페이', value: 'TOSSPAY' }
             ],
-            render: (paymentMethod) => getPaymentMethodLabel(paymentMethod)
+            render: (embPgProvider) => getPaymentMethodLabel(embPgProvider)
         },
         {
             title: '결제상태',
@@ -483,22 +479,22 @@ const AdminPayments = () => {
                 </Tag>
             </Descriptions.Item>
             <Descriptions.Item label="결제수단">
-                {getPaymentMethodLabel(selectedPayment.paymentMethod)}
+                {getPaymentMethodLabel(selectedPayment.embPgProvider)}
             </Descriptions.Item>
             <Descriptions.Item label="결제금액">
-                ₩{Number(selectedPayment.amount).toLocaleString()}
+                ₩{Number(selectedPayment.paidAmount).toLocaleString()}
             </Descriptions.Item>
             <Descriptions.Item label="결제요청시간">
-                {formatDate(selectedPayment.requestedAt, true)}
+                {formatDate(selectedPayment.createdAt, true)}
             </Descriptions.Item>
             <Descriptions.Item label="고객명">
-                {selectedPayment.customerName}
+                {selectedPayment.buyerName}
             </Descriptions.Item>
             <Descriptions.Item label="이메일">
-                {selectedPayment.customerEmail}
+                {selectedPayment.buyerEmail}
             </Descriptions.Item>
             <Descriptions.Item label="전화번호">
-                {selectedPayment.customerPhone}
+                {selectedPayment.buyerTel}
             </Descriptions.Item>
             {selectedPayment.errorCode && (
                 <>
@@ -521,7 +517,7 @@ const AdminPayments = () => {
         fetchPayments({
             impUid: '',
             merchantUid: '',
-            customerEmail: '',
+            buyerEmail: '',
             startDate: '',
             endDate: ''
         });
@@ -556,7 +552,7 @@ const AdminPayments = () => {
                         >
                             <Select.Option value="impUid">결제번호</Select.Option>
                             <Select.Option value="merchantUid">주문번호</Select.Option>
-                            <Select.Option value="customerEmail">이메일</Select.Option>
+                            <Select.Option value="buyerEmail">이메일</Select.Option>
                         </SearchTypeSelect>
                         <SearchInput
                             placeholder={`${

@@ -41,7 +41,7 @@ public class OrderController {
     public ResponseEntity<?> insertOrder(@RequestBody NewOrderDTO newOrderDTO) {
         try {       
             orderService.insertOrder(newOrderDTO);
-            return ResponseEntity.ok("주문 접수가 완료되었습니다.");
+            return ResponseEntity.ok("주문이 완료되었습니다.");
         } catch (ProductException.ProductNotFoundException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (ProductException.ProductItemQuantityException e) {

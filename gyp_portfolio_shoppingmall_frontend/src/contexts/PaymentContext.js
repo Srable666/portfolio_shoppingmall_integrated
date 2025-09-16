@@ -5,6 +5,7 @@ import {
     API_ENDPOINTS, 
     ERROR_TYPES 
 } from '../constants/payment';
+import { App } from 'antd';
     
 // 결제 오류 클래스
 class PaymentError extends Error {
@@ -19,11 +20,13 @@ class PaymentError extends Error {
 const PaymentContext = createContext();
 
 export const PaymentProvider = ({ children }) => {
+    const { message } = App.useApp();
     const { authRequest } = useContext(AuthContext);
-    
+
     const [loading, setLoading] = useState(false);
     const [currentPayment, setCurrentPayment] = useState(null);
     const [sdkInitialized, setSdkInitialized] = useState(false);
+    const [isMobilePayment] = useState(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
 
     // 포트원 SDK 초기화 및 환경변수 검증
     useEffect(() => {
@@ -69,7 +72,7 @@ export const PaymentProvider = ({ children }) => {
     };
 
     // 결제 요청
-    const requestPayment = (paymentInfo) => {
+    const requestPayment = (paymentInfo, orderData) => {
         return new Promise((resolve, reject) => {
             try {
                 const { IMP } = window;
@@ -78,54 +81,101 @@ export const PaymentProvider = ({ children }) => {
                 }
 
                 validatePaymentInfo(paymentInfo);
-                setLoading(true);
 
-                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                const merchantUid = `ORD${generateEmailHash(paymentInfo.buyerEmail)}${new Date().getTime()}`;
 
                 const paymentData = {
                     pg: 'tosspayments',
-                    merchant_uid: paymentInfo.orderCode,
-                    name: paymentInfo.productName,
+                    pay_method: paymentInfo.paymentMethod,
+                    merchant_uid: merchantUid,
+                    name: paymentInfo.name,
                     amount: paymentInfo.amount,
                     buyer_email: paymentInfo.buyerEmail,
                     buyer_name: paymentInfo.buyerName,
                     buyer_tel: paymentInfo.buyerTel,
                     buyer_addr: paymentInfo.buyerAddr,
                     buyer_postcode: paymentInfo.buyerPostcode,
-                    custom_data: paymentInfo.customData,
-                    notice_url: paymentInfo.webhookUrl,
-                    display: { card_quota: [] }
+                    custom_data: JSON.stringify(orderData),
                 };
 
-                // 모바일 환경일 때는 m_redirect_url만 설정
-                if (isMobile) {
-                    paymentData.m_redirect_url = `${window.location.origin}/order/complete`;
-                }
-
-                IMP.request_pay(paymentData, (response) => {
-                    if (!isMobile) {
-                        if (response.success) {
-                            setCurrentPayment(prev => ({
-                                ...prev,
-                                impUid: response.imp_uid,
-                                status: PAYMENT_STATUS.PAID,
-                                updatedAt: new Date().toISOString()
-                            }));
-                            resolve(response);
-                        } else {
-                            handlePaymentError(new Error(response.error_msg));
-                        }
-                    }
-                });
+                if (isMobilePayment) {
+                    // 모바일 환경일 때는 m_redirect_url만 설정
+                    paymentData.m_redirect_url = `${window.location.origin}/shopping-mall/order/process`;
     
-                // 모바일 환경에서는 즉시 resolve
-                if (isMobile) {
-                    resolve({ success: true });
-                }
+                    // 모바일에서는 리디렉션 방식이므로 즉시 resolve
+                    IMP.request_pay(paymentData);
+                    localStorage.setItem('pendingMobilePayment', JSON.stringify({ paymentInfo, orderData, merchantUid }));
+                    resolve({ success: true, isMobile: true });
+                } else {
+                    // 데스크톱에서는 콜백으로 결과 처리
+                    IMP.request_pay(paymentData, async (response) => {    
+                        // imp_uid가 있으면 성공으로 간주 (포트원 V1 SDK 이슈 대응)
+                        const isSuccess = response.success === true || 
+                                        (response.imp_uid && response.merchant_uid && !response.error_msg);
+                        
+                        if (isSuccess) {                            
+                            try {
+                                message.loading('결제 진행 중입니다...');
+
+                                // 결제 검증 및 이력 저장
+                                await authRequest('post', '/payment/verify/' + response.imp_uid);
+
+                                // 결제 성공 후 백엔드에 주문 생성 요청
+                                const orderResponse = await authRequest('post', '/order/insertOrder', {
+                                    merchantUid: merchantUid,
+                                    orderProductDTOList: orderData.products.map(item => ({
+                                        productItemId: item.productItemId,
+                                        originalQuantity: item.quantity,
+                                        price: item.price,
+                                        discountRate: item.discountRate,
+                                        finalPrice: item.finalPrice,
+                                        size: item.size,
+                                        color: item.color
+                                    })),
+                                    deliveryFee: orderData.shippingFee,
+                                    paymentMethod: response.pay_method || paymentInfo.paymentMethod,
+                                    recipientName: paymentInfo.buyerName,
+                                    recipientPhone: paymentInfo.buyerTel,
+                                    recipientPostcode: paymentInfo.buyerPostcode,
+                                    recipientAddress: paymentInfo.buyerAddr,
+                                    deliveryRequest: paymentInfo.deliveryRequest
+                                });
+
+                                setCurrentPayment(prev => ({
+                                    ...prev,
+                                    impUid: response.imp_uid,
+                                    status: PAYMENT_STATUS.PAID,
+                                    updatedAt: new Date().toISOString()
+                                }));
+                                message.destroy();
+
+                                resolve({
+                                    ...response,
+                                    success: true,
+                                    order: orderResponse.data
+                                });
+                            } catch (orderError) {
+                                message.destroy();
+                                // 주문 생성 실패 시 결제 취소 시도
+                                console.error('주문 생성 실패:', orderError);
+                                reject(new PaymentError('주문 생성에 실패했습니다.', ERROR_TYPES.PAYMENT_REQUEST));
+                            }
+                        } else {
+                            const errorMessage = response.error_msg || response.fail_reason || '결제 처리 중 오류가 발생했습니다.';
+                            console.error('Payment failed with error:', errorMessage, response);
+                            reject(new PaymentError(response.error_msg, ERROR_TYPES.PAYMENT_REQUEST));
+                        }
+                    });
+                };
             } catch (error) {
-                handlePaymentError(error);
-            } finally {
-                setLoading(false);
+                message.destroy();
+                if (error instanceof PaymentError) {
+                    reject(error);
+                } else if (!error.response) {
+                    reject(new PaymentError('NETWORK_ERROR', ERROR_TYPES.NETWORK));
+                } else {
+                    reject(new PaymentError('API_ERROR', ERROR_TYPES.PAYMENT_REQUEST));
+                }
             }
         });
     };
@@ -220,12 +270,8 @@ export const PaymentProvider = ({ children }) => {
     // 유효성 검사 함수
     const validatePaymentInfo = (paymentInfo) => {
         const errors = [];
-    
-        if (!paymentInfo.orderCode) {
-            errors.push('주문 번호가 없습니다.');
-        }
 
-        if (!paymentInfo.productName) {
+        if (!paymentInfo.name) {
             errors.push('상품명이 없습니다.');
         }
         
@@ -266,10 +312,23 @@ export const PaymentProvider = ({ children }) => {
         );
     };
 
+    // 이메일 해시화 함수
+    const generateEmailHash = (email) => {
+        let hash = 0;
+        for (let i = 0; i < email.length; i++) {
+            const char = email.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // 32bit 정수로 변환
+        }
+        // 절댓값을 취하고 6자리로 패딩
+        return Math.abs(hash).toString().padStart(6, '0').slice(-6);
+    };
+
     return (
         <PaymentContext.Provider 
             value={{
                 loading,
+                isMobilePayment,
                 currentPayment,
                 sdkInitialized,
                 verifyPayment,

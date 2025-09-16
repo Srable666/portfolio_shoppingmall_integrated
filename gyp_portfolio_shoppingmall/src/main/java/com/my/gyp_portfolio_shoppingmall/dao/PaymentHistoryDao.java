@@ -57,4 +57,12 @@ public class PaymentHistoryDao {
     public int getPaymentCount() {
         return s.selectOne("PaymentHistoryMapper.getPaymentCount");
     }
+
+    // 주문 ID 업데이트
+    public int updateOrderId(String merchantUid, int orderId) {
+        PaymentHistory updateParam = new PaymentHistory();
+        updateParam.setMerchantUid(merchantUid);
+        updateParam.setOrderId(orderId);
+        return s.update("PaymentHistoryMapper.updateOrderId", updateParam);
+    }
 }

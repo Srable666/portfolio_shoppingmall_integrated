@@ -1,7 +1,6 @@
 package com.my.gyp_portfolio_shoppingmall.dto;
 
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -42,49 +41,26 @@ public class PaymentDto {
 
     // 포트원 응답 DTO
     @Getter @Setter
-    public class PortOneResponseDTO<T> {
-        private int code;
-        private String message;
-        private T response;  // 제네릭 타입 T를 사용
-    }
-
-    // 포트원 응답 DTO
-    @Getter @Setter
     public static class PaymentDataDTO {
-        private String id;                     // 결제 ID
-        private String transactionKey;         // 거래 키
-        private String status;                 // 결제 상태
-        private String method;                 // 결제 수단
-        private String orderRef;               // 주문 번호 (merchantUid)
-        private String orderName;              // 주문명
-        private OffsetDateTime requestedAt;    // 요청 시점
-        
-        // 결제 금액 정보 - 필수 정보만 포함
-        @Getter @Setter
-        public static class PaymentAmountDTO {
-            private long total;          // 총 결제 금액
-            private long balanceDue;     // 결제 잔액
-        }
-        private PaymentAmountDTO amount;
-        
-        // 구매자 정보 - 필수 정보만 포함
-        @Getter @Setter
-        public static class CustomerDTO {
-            private String name;               // 이름
-            private String phoneNumber;        // 전화번호
-            private String email;              // 이메일
-        }
-        private CustomerDTO customer;
-        
-        // 결제 수단별 정보 - 가상계좌 예시
-        @Getter @Setter
-        public static class VirtualAccountInfoDTO {
-            private String accountNumber;      // 계좌번호
-            private String bankCode;           // 은행 코드
-            private String bankName;           // 은행명
-            private String holderName;         // 예금주
-        }
-        private VirtualAccountInfoDTO virtualAccountInfo;
+        private String imp_uid;
+        private String merchant_uid;
+        private String pg_tid;
+        private String name;
+        private String status;
+        private String pay_method;
+        private String pg_provider;
+        private String emb_pg_provider;
+        private Long paid_amount;
+        private String buyer_name;
+        private String buyer_email;
+        private String buyer_tel;
+        private String buyer_addr;
+        private String buyer_postcode;
+        private Long paid_at;
+        private String custom_data;
+        private String receipt_url;
+        private String error_code;
+        private String error_msg;
     }
 
     // 결제 취소 요청 DTO
@@ -93,29 +69,6 @@ public class PaymentDto {
         private String reason;
     }
     
-    // 가상계좌 요청 DTO
-    @Getter @Setter
-    public static class VirtualAccountRequestDTO {
-        @JsonProperty("customer_name")
-        private String customerName;
-        @JsonProperty("bank_code")
-        private String bankCode;
-    }
-
-    // 가상계좌 응답 DTO
-    @Getter @Setter
-    public static class VirtualAccountDTO {
-        @JsonProperty("account_number")
-        private String accountNumber;
-        @JsonProperty("bank_code")
-        private String bankCode;
-        @JsonProperty("bank_name")
-        private String bankName;
-        @JsonProperty("customer_name")
-        private String customerName;
-        private String status;
-    }
-
     // 결제 준비 요청 DTO
     @Getter @Setter
     public static class PaymentPrepareRequestDTO {
@@ -162,14 +115,22 @@ public class PaymentDto {
         private Integer paymentHistoryId;
         private String impUid;
         private String merchantUid;
-        private String customerEmail;
+        private String buyerEmail;
         private Integer orderId;
         private PaymentStatus status;
-        private PaymentMethod paymentMethod;
-        private long amount;
+        private PaymentMethod payMethod;
+        private long paidAmount;
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
         private LocalDateTime startDate;
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
         private LocalDateTime endDate;
+    }
+    
+    // V1 API 응답 래퍼
+    @Getter @Setter
+    public static class IamportV1ResponseDTO<T> {
+        private int code;           // 0: 성공, 그 외: 실패
+        private String message;     // 응답 메시지
+        private T response;         // 실제 데이터
     }
 }
