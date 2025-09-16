@@ -70,6 +70,16 @@ const LogoContainer = styled.div`
         font-size: 18px;
 }`;
 
+const LogoButton = styled.button`
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: white;
+    font-size: 22px;
+    font-weight: bold;
+    padding: 0;
+`;
+
 // 오른쪽 섹션
 const RightSection = styled.div`
     display: flex;
@@ -734,6 +744,15 @@ const AppLayout = () => {
         fetchSubCategories(categoryInfo.categoryId);
     }, [location.state?.categoryInfo, updateCategoryInfo, fetchSubCategories]);
 
+    // 홈페이지에서 카테고리 초기화
+    useEffect(() => {
+        if (location.pathname === '/') {
+            setCurrentCategory(null);
+            setCategoryPath([]);
+            setSubCategories([]);
+        }
+    }, [location.pathname]);
+
     // ProductDetail에서 발생하는 카테고리 정보 업데이트 이벤트 처리
     useEffect(() => {
         const handleCategoryUpdate = (event) => {
@@ -889,14 +908,12 @@ const AppLayout = () => {
             <HeaderContainer>
                 <TopHeader role="banner">
                     <LogoContainer>
-                        <Link 
-                            to="/" 
-                            style={{ color: 'white' }} 
-                            aria-label="홈으로 이동"
+                        <LogoButton 
                             onClick={goToHome}
+                            aria-label="홈으로 이동"
                         >
                             ShoppingMall
-                        </Link>
+                        </LogoButton>
                     </LogoContainer>
                     
                     <RightSection>
@@ -1041,7 +1058,10 @@ const AppLayout = () => {
                     >
                         <Tooltip title="홈으로 이동" placement="bottom">
                             <CategoryHomeButton 
-                                onClick={goToHome}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    goToHome();
+                                }}
                                 aria-label="홈으로 이동"
                                 onKeyDown={(e) => e.key === 'Enter' && goToHome()}
                                 $isHome={location.pathname === '/'}
