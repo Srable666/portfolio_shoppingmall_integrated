@@ -95,6 +95,16 @@ public class ProductController {
         }
     }
     
+    // 모든 카테고리 목록 조회
+    @GetMapping("/getAllCategories")
+    public ResponseEntity<?> getAllCategories() {
+        try {
+            return ResponseEntity.ok(productService.getAllCategories());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("카테고리 목록 조회 중 오류가 발생했습니다.");
+        }
+    }
+
     // 상품 마스터 등록
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("/insertProduct")

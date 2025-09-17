@@ -501,4 +501,10 @@ public class ProductService {
             return new ArrayList<>();
         }
     }
+
+    // 모든 카테고리 목록 조회
+    @Transactional(readOnly = true)
+    public List<Category> getAllCategories() {
+        return productDao.getAllCategories();
+    }
 }

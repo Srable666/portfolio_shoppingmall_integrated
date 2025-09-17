@@ -202,4 +202,9 @@ public class ProductDao {
         Integer count = s.selectOne("ProductMapper.isCodeExists", code);
         return count != null && count > 0;
     }
+
+    // 모든 카테고리 목록 조회
+    public List<Category> getAllCategories() {
+        return s.selectList("CategoryMapper.getCategories");
+    }
 }
